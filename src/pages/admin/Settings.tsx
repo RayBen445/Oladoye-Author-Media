@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import AdminSidebar from "../../components/AdminSidebar";
+import AdminLayout from "../../components/AdminLayout";
 import { Save, User, Mail, Globe, Twitter, Instagram, Facebook, Linkedin, Loader2, CheckCircle, Quote } from "lucide-react";
 import { useSiteSettings } from "../../hooks/useSiteSettings";
 import ImageUpload from "../../components/admin/ImageUpload";
@@ -65,19 +65,17 @@ export default function AdminSettings() {
 
   if (loading) {
     return (
-      <div className="flex">
-        <AdminSidebar />
-        <main className="flex-grow flex items-center justify-center">
+      <AdminLayout>
+        <main className="flex items-center justify-center min-h-[calc(100vh-112px)]">
           <Loader2 className="animate-spin text-primary" size={40} />
         </main>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="flex">
-      <AdminSidebar />
-      <main className="flex-grow p-8 bg-soft-cream/50 min-h-[calc(100vh-64px)]">
+    <AdminLayout>
+      <main className="p-8 bg-soft-cream/50 min-h-[calc(100vh-112px)]">
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="flex justify-between items-center">
             <div>
@@ -295,6 +293,6 @@ export default function AdminSettings() {
           </div>
         </div>
       </main>
-    </div>
+    </AdminLayout>
   );
 }

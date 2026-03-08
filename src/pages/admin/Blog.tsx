@@ -1,5 +1,5 @@
 import { useState } from "react";
-import AdminSidebar from "../../components/AdminSidebar";
+import AdminLayout from "../../components/AdminLayout";
 import { Plus, Search, Edit, Trash2, Eye, Calendar, User, Loader2 } from "lucide-react";
 import { useBlogPosts } from "../../hooks/useBlogPosts";
 import { supabase, type BlogPost } from "../../lib/supabase";
@@ -29,9 +29,8 @@ export default function AdminBlog() {
   };
 
   return (
-    <div className="flex">
-      <AdminSidebar />
-      <main className="flex-grow p-8 bg-soft-cream/50 min-h-[calc(100vh-64px)]">
+    <AdminLayout>
+      <main className="p-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex justify-between items-center">
             <div>
@@ -142,12 +141,12 @@ export default function AdminBlog() {
       </main>
 
       {showForm && (
-        <BlogForm 
-          post={editingPost} 
-          onClose={() => setShowForm(false)} 
-          onSuccess={refetch} 
+        <BlogForm
+          post={editingPost}
+          onClose={() => setShowForm(false)}
+          onSuccess={refetch}
         />
       )}
-    </div>
+    </AdminLayout>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import AdminSidebar from '../../components/AdminSidebar';
+import AdminLayout from '../../components/AdminLayout';
 import { Mail, Trash2, Loader2, Search, Download, Send, X, Sparkles } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 
@@ -159,9 +159,8 @@ export default function AdminSubscribers() {
   };
 
   return (
-    <div className="flex">
-      <AdminSidebar />
-      <main className="flex-grow p-8 bg-soft-cream/50 min-h-screen">
+    <AdminLayout>
+      <main className="p-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex justify-between items-center">
             <div>
@@ -342,6 +341,6 @@ export default function AdminSubscribers() {
           </div>
         </div>
       )}
-    </div>
+    </AdminLayout>
   );
 }

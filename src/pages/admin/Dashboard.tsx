@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import AdminSidebar from "../../components/AdminSidebar";
+import AdminLayout from "../../components/AdminLayout";
 import { Book, PenTool, Users, TrendingUp, Plus, ArrowRight, Loader2, ShieldAlert, XCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSiteSettings } from "../../hooks/useSiteSettings";
@@ -98,19 +98,17 @@ export default function AdminDashboard() {
 
   if (statsLoading) {
     return (
-      <div className="flex">
-        <AdminSidebar />
-        <main className="flex-grow p-8 bg-soft-cream/50 min-h-screen flex items-center justify-center">
+      <AdminLayout>
+        <main className="p-8 flex items-center justify-center min-h-[calc(100vh-112px)]">
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </main>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="flex">
-      <AdminSidebar />
-      <main className="flex-grow p-8 bg-soft-cream/50 min-h-[calc(100vh-64px)]">
+    <AdminLayout>
+      <main className="p-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex justify-between items-center">
             <div>
@@ -212,6 +210,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       </main>
-    </div>
+    </AdminLayout>
   );
 }

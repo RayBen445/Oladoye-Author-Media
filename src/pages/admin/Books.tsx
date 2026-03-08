@@ -1,5 +1,5 @@
 import { useState } from "react";
-import AdminSidebar from "../../components/AdminSidebar";
+import AdminLayout from "../../components/AdminLayout";
 import { Plus, Search, MoreVertical, Edit, Trash2, Loader2 } from "lucide-react";
 import { useBooks } from "../../hooks/useBooks";
 import { supabase, type Book } from "../../lib/supabase";
@@ -29,9 +29,8 @@ export default function AdminBooks() {
   };
 
   return (
-    <div className="flex">
-      <AdminSidebar />
-      <main className="flex-grow p-8 bg-soft-cream/50 min-h-[calc(100vh-64px)]">
+    <AdminLayout>
+      <main className="p-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex justify-between items-center">
             <div>
@@ -141,12 +140,12 @@ export default function AdminBooks() {
       </main>
 
       {showForm && (
-        <BookForm 
-          book={editingBook} 
-          onClose={() => setShowForm(false)} 
-          onSuccess={refetch} 
+        <BookForm
+          book={editingBook}
+          onClose={() => setShowForm(false)}
+          onSuccess={refetch}
         />
       )}
-    </div>
+    </AdminLayout>
   );
 }
