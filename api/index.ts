@@ -97,10 +97,13 @@ function buildNewsletterHtml(
   subject: string,
   content: string,
   siteName: string,
-  authorName: string
+  authorName: string,
+  featuredImageUrl?: string,
+  accentColor?: string
 ): string {
   const bodyHtml = markdownToHtml(content);
   const year = new Date().getFullYear();
+  const headerBg = accentColor || "#8B6F47";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -117,12 +120,19 @@ function buildNewsletterHtml(
 
           <!-- ===== HEADER ===== -->
           <tr>
-            <td style="background-color:#8B6F47;padding:36px 40px;text-align:center;">
+            <td style="background-color:${headerBg};padding:36px 40px;text-align:center;">
               <p style="margin:0 0 6px;color:rgba(251,247,240,0.65);font-size:11px;letter-spacing:3px;text-transform:uppercase;">A letter from</p>
               <h1 style="margin:0;color:#FBF7F0;font-family:Georgia,'Times New Roman',serif;font-size:30px;font-weight:bold;letter-spacing:0.5px;">${siteName}</h1>
               <div style="width:44px;height:2px;background-color:rgba(251,247,240,0.35);margin:18px auto 0;"></div>
             </td>
           </tr>
+
+          <!-- ===== HERO IMAGE (optional) ===== -->
+          ${featuredImageUrl ? `<tr>
+            <td style="padding:0;line-height:0;">
+              <img src="${featuredImageUrl}" alt="" style="width:100%;max-width:600px;height:auto;display:block;" />
+            </td>
+          </tr>` : ""}
 
           <!-- ===== SUBJECT BANNER ===== -->
           <tr>
@@ -189,7 +199,15 @@ async function setupServer() {
     });
 
     app.post("/api/send-newsletter", async (req, res) => {
-      const { subject, content, subscribers, siteName = "Oladoye Author Media", authorName = "The Author" } = req.body;
+      const {
+        subject,
+        content,
+        subscribers,
+        siteName = "Oladoye Author Media",
+        authorName = "The Author",
+        featuredImageUrl,
+        accentColor,
+      } = req.body;
 
       if (!subject || !content || !subscribers || !Array.isArray(subscribers)) {
         return res.status(400).json({ error: "Missing required fields" });
@@ -199,7 +217,7 @@ async function setupServer() {
 
       const { EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, EMAIL_FROM } = process.env;
 
-      const htmlBody = buildNewsletterHtml(subject, content, siteName, authorName);
+      const htmlBody = buildNewsletterHtml(subject, content, siteName, authorName, featuredImageUrl, accentColor);
 
       // Check if SMTP credentials are provided
       if (EMAIL_HOST && EMAIL_USER && EMAIL_PASS) {
