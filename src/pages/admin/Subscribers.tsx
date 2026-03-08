@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import AdminLayout from '../../components/AdminLayout';
-import { Mail, Trash2, Loader2, Search, Download, Send, X, Sparkles, Image as ImageIcon, Palette, Users, CheckSquare, Square, ChevronRight } from 'lucide-react';
+import { Mail, Trash2, Loader2, Search, Download, Send, X, Sparkles, Image as ImageIcon, Palette, Users, CheckSquare, Square, ChevronRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { useSiteSettings } from '../../hooks/useSiteSettings';
 
@@ -12,6 +12,129 @@ interface Subscriber {
 }
 
 type ModalTab = 'recipients' | 'compose';
+
+interface SendProgress {
+  phase: 'idle' | 'sending' | 'done' | 'error';
+  total: number;
+  /** Simulated "current email index" for the progress bar */
+  current: number;
+  delivered: number;
+  failed: number;
+  errorMessage?: string;
+  simulated?: boolean;
+  siteName: string;
+}
+
+// ── Mailchimp-style progress / summary panel ───────────────────────────────
+function SendProgressPanel({
+  progress,
+  onClose,
+}: {
+  progress: SendProgress;
+  onClose: () => void;
+}) {
+  const pct = progress.total > 0
+    ? Math.round((progress.current / progress.total) * 100)
+    : 0;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-deep-brown/50 backdrop-blur-sm">
+      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl border border-primary/10 overflow-hidden">
+
+        {/* Header */}
+        <div className={`px-6 py-5 flex items-center space-x-3 ${
+          progress.phase === 'done'  ? 'bg-emerald-50 border-b border-emerald-100' :
+          progress.phase === 'error' ? 'bg-red-50 border-b border-red-100' :
+                                       'bg-soft-cream/40 border-b border-primary/5'
+        }`}>
+          <div className={`p-2 rounded-xl ${
+            progress.phase === 'done'  ? 'bg-emerald-100 text-emerald-600' :
+            progress.phase === 'error' ? 'bg-red-100 text-red-500' :
+                                         'bg-primary/10 text-primary'
+          }`}>
+            {progress.phase === 'done'  && <CheckCircle2 size={22} />}
+            {progress.phase === 'error' && <AlertCircle size={22} />}
+            {(progress.phase === 'sending' || progress.phase === 'idle') && <Loader2 size={22} className="animate-spin" />}
+          </div>
+          <div>
+            <h3 className="font-serif font-bold text-deep-brown text-lg leading-tight">
+              {progress.phase === 'done'  ? 'Newsletter Sent!' :
+               progress.phase === 'error' ? 'Sending Failed' :
+                                            'Sending Newsletter…'}
+            </h3>
+            <p className="text-xs font-medium text-taupe">
+              {progress.phase === 'sending'
+                ? `Sending to subscriber ${Math.min(progress.current + 1, progress.total)} of ${progress.total}…`
+                : progress.phase === 'done'
+                  ? progress.simulated ? 'Simulation complete — SMTP not configured' : 'All emails processed'
+                  : progress.errorMessage ?? 'An error occurred'}
+            </p>
+          </div>
+          {progress.phase !== 'sending' && (
+            <button
+              onClick={onClose}
+              className="ml-auto p-1.5 hover:bg-black/5 rounded-full text-taupe hover:text-deep-brown transition-colors"
+            >
+              <X size={18} />
+            </button>
+          )}
+        </div>
+
+        {/* Progress bar */}
+        <div className="px-6 pt-5 pb-2">
+          <div className="h-2.5 bg-soft-cream rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ease-out ${
+                progress.phase === 'done'  ? 'bg-emerald-500' :
+                progress.phase === 'error' ? 'bg-red-400' :
+                                             'bg-primary'
+              }`}
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <div className="flex justify-between mt-1.5 text-xs font-medium text-taupe">
+            <span>{progress.phase === 'done' ? '✓ Completed' : `${pct}%`}</span>
+            <span>{progress.total} recipient{progress.total !== 1 ? 's' : ''}</span>
+          </div>
+        </div>
+
+        {/* Delivery summary (shown only on done / error) */}
+        {(progress.phase === 'done' || progress.phase === 'error') && (
+          <div className="px-6 pb-6">
+            <div className="mt-4 rounded-2xl bg-soft-cream/40 border border-primary/5 divide-y divide-primary/5">
+              {[
+                { label: 'Recipients', value: progress.total },
+                { label: 'Delivered',  value: progress.delivered,  color: 'text-emerald-600' },
+                { label: 'Failed',     value: progress.failed,     color: progress.failed > 0 ? 'text-red-500' : undefined },
+                { label: 'Sender',     value: progress.siteName },
+              ].map(row => (
+                <div key={row.label} className="flex justify-between items-center px-4 py-2.5 text-sm">
+                  <span className="font-medium text-taupe">{row.label}</span>
+                  <span className={`font-bold text-deep-brown ${row.color ?? ''}`}>{row.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {progress.phase === 'done' && (
+              <p className="mt-3 text-center text-xs text-taupe">
+                This panel will close automatically in a few seconds.
+              </p>
+            )}
+
+            <button
+              onClick={onClose}
+              className={`mt-4 w-full py-3 rounded-xl font-bold text-white transition-all ${
+                progress.phase === 'done' ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-red-500 hover:bg-red-600'
+              }`}
+            >
+              {progress.phase === 'done' ? 'Close' : 'Dismiss'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function AdminSubscribers() {
   const { settings } = useSiteSettings();
@@ -36,6 +159,30 @@ export default function AdminSubscribers() {
   const [accentColor, setAccentColor] = useState('#8B6F47');
   const [sending, setSending] = useState(false);
   const [generating, setGenerating] = useState(false);
+
+  // ── Send progress panel state ─────────────────────────────────────────────
+  const defaultProgress: SendProgress = {
+    phase: 'idle', total: 0, current: 0, delivered: 0, failed: 0, siteName: '',
+  };
+  const [sendProgress, setSendProgress] = useState<SendProgress>(defaultProgress);
+  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-close the progress panel 5 s after success
+  useEffect(() => {
+    if (sendProgress.phase === 'done') {
+      autoCloseTimerRef.current = setTimeout(closeSendProgress, 5000);
+    }
+    return () => {
+      if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
+    };
+  }, [sendProgress.phase]);
+
+  const closeSendProgress = () => {
+    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+    if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
+    setSendProgress(defaultProgress);
+  };
 
   // ── Fetch ────────────────────────────────────────────────────────────────
   const fetchSubscribers = async () => {
@@ -166,7 +313,15 @@ export default function AdminSubscribers() {
     e.preventDefault();
     if (!subject || !content) return;
     if (modalSelectedIds.size === 0) {
-      alert('Please select at least one recipient.');
+      setSendProgress({
+        phase: 'error',
+        total: 0,
+        current: 0,
+        delivered: 0,
+        failed: 0,
+        errorMessage: 'Please select at least one recipient.',
+        siteName: settings?.site_name || 'Oladoye Author Media',
+      });
       return;
     }
 
@@ -174,8 +329,37 @@ export default function AdminSubscribers() {
       .filter(s => modalSelectedIds.has(s.id))
       .map(s => s.email);
 
+    const total = recipientEmails.length;
+    const siteName = settings?.site_name || 'Oladoye Author Media';
+
+    // Close the compose modal and open the progress panel
+    setIsModalOpen(false);
+    setSending(true);
+
+    setSendProgress({
+      phase: 'sending',
+      total,
+      current: 0,
+      delivered: 0,
+      failed: 0,
+      siteName,
+    });
+
+    // Simulate per-email progress ticks while the HTTP request is in-flight.
+    // We advance 1 "tick" every (estimated total time / total) ms, but stop
+    // one tick short so the bar doesn't reach 100 % before the real response.
+    const tickMs = Math.max(300, Math.min(1500, 3000 / total));
+    let tick = 0;
+    progressTimerRef.current = setInterval(() => {
+      tick++;
+      if (tick < total) {
+        setSendProgress(prev => ({ ...prev, current: tick }));
+      } else {
+        if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+      }
+    }, tickMs);
+
     try {
-      setSending(true);
       const response = await fetch('/api/send-newsletter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -184,21 +368,27 @@ export default function AdminSubscribers() {
           content,
           contentType,
           subscribers: recipientEmails,
-          siteName: settings?.site_name || 'Oladoye Author Media',
+          siteName,
           authorName: settings?.author_name || 'The Author',
           featuredImageUrl: featuredImageUrl || undefined,
           accentColor: accentColor !== '#8B6F47' ? accentColor : undefined,
         }),
       });
 
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+
       const data = await response.json();
       if (data.success) {
-        if (data.simulated) {
-          alert('Newsletter simulation complete! Actual emails were NOT sent — SMTP credentials not configured.');
-        } else {
-          alert(data.message);
-        }
-        setIsModalOpen(false);
+        setSendProgress({
+          phase: 'done',
+          total,
+          current: total,
+          delivered: data.delivered ?? total,
+          failed: data.failed ?? 0,
+          simulated: data.simulated,
+          siteName,
+        });
+        // Reset compose fields
         setSubject('');
         setContent('');
         setContentType('markdown');
@@ -208,7 +398,13 @@ export default function AdminSubscribers() {
         throw new Error(data.error || 'Failed to send newsletter');
       }
     } catch (error: any) {
-      alert('Error: ' + error.message);
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
+      setSendProgress(prev => ({
+        ...prev,
+        phase: 'error',
+        current: prev.current,
+        errorMessage: error.message,
+      }));
     } finally {
       setSending(false);
     }
@@ -646,6 +842,11 @@ export default function AdminSubscribers() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Mailchimp-style send progress panel ── */}
+      {sendProgress.phase !== 'idle' && (
+        <SendProgressPanel progress={sendProgress} onClose={closeSendProgress} />
       )}
     </AdminLayout>
   );

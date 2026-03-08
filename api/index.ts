@@ -240,31 +240,33 @@ async function setupServer() {
             },
           });
 
-          // Send emails in chunks to avoid rate limits
-          const chunkSize = 10;
-          let sentCount = 0;
+          // Send emails sequentially so individual failures are tracked
+          let delivered = 0;
+          let failed = 0;
 
-          for (let i = 0; i < subscribers.length; i += chunkSize) {
-            const chunk = subscribers.slice(i, i + chunkSize);
-            const sendPromises = chunk.map(email =>
-              transporter.sendMail({
+          for (const email of subscribers) {
+            try {
+              await transporter.sendMail({
                 from: EMAIL_FROM || EMAIL_USER,
                 to: email,
                 subject: subject,
                 text: content, // Plain-text fallback
                 html: htmlBody,
-              })
-            );
-
-            await Promise.all(sendPromises);
-            sentCount += chunk.length;
-            console.log(`Sent chunk of ${chunk.length} emails. Total: ${sentCount}`);
+              });
+              delivered++;
+              console.log(`[SENT] To: ${email} (${delivered}/${subscribers.length})`);
+            } catch (emailErr: any) {
+              failed++;
+              console.error(`[FAILED] To: ${email} — ${emailErr.message}`);
+            }
           }
 
           return res.json({
             success: true,
-            message: `Newsletter successfully sent to ${subscribers.length} subscribers.`,
-            count: subscribers.length
+            message: `Newsletter sent: ${delivered} delivered, ${failed} failed.`,
+            count: subscribers.length,
+            delivered,
+            failed,
           });
         } catch (error: any) {
           console.error("Error sending newsletter via SMTP:", error);
@@ -274,19 +276,21 @@ async function setupServer() {
         // Fallback to simulation if no SMTP credentials
         console.log("No SMTP credentials found. Simulating email sending...");
         try {
-          // Simulate network delay
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          // Simulate a brief delay proportional to subscriber count (capped at 3 s)
+          const delay = Math.min(subscribers.length * 300, 3000);
+          await new Promise(resolve => setTimeout(resolve, delay));
 
-          // Log the "sent" emails
           subscribers.forEach(email => {
             console.log(`[SIMULATED EMAIL SENT] To: ${email} | Subject: ${subject}`);
           });
 
           res.json({
             success: true,
-            message: `(SIMULATED) Newsletter successfully sent to ${subscribers.length} subscribers. No SMTP credentials provided.`,
+            message: `(SIMULATED) Newsletter sent to ${subscribers.length} subscribers. No SMTP credentials provided.`,
             count: subscribers.length,
-            simulated: true
+            delivered: subscribers.length,
+            failed: 0,
+            simulated: true,
           });
         } catch (error: any) {
           console.error("Error simulating newsletter sending:", error);
