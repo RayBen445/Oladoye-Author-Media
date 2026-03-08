@@ -23,6 +23,7 @@ interface SendProgress {
   failed: number;
   errorMessage?: string;
   simulated?: boolean;
+  historyNote?: string;
   siteName: string;
 }
 
@@ -119,6 +120,12 @@ function SendProgressPanel({
             {progress.phase === 'done' && (
               <p className="mt-3 text-center text-xs text-taupe">
                 This panel will close automatically in a few seconds.
+              </p>
+            )}
+
+            {progress.historyNote && (
+              <p className="mt-2 text-center text-xs text-amber-600 font-medium">
+                ⚠ {progress.historyNote}
               </p>
             )}
 
@@ -393,7 +400,7 @@ export default function AdminSubscribers() {
           siteName,
         });
 
-        // Persist the campaign to Supabase (best-effort; ignore errors)
+        // Persist the campaign to Supabase (best-effort)
         supabase.from('newsletter_campaigns').insert([{
           subject,
           content,
@@ -405,7 +412,13 @@ export default function AdminSubscribers() {
           featured_image_url: featuredImageUrl || null,
           accent_color: accentColor !== '#8B6F47' ? accentColor : null,
         } satisfies Omit<NewsletterCampaign, 'id' | 'sent_at'>]).then(({ error: dbErr }) => {
-          if (dbErr) console.warn('Could not save campaign record:', dbErr.message);
+          if (dbErr) {
+            console.warn('Could not save campaign record:', dbErr.message);
+            setSendProgress(prev => ({
+              ...prev,
+              historyNote: 'History not saved — run the newsletter_campaigns SQL migration first.',
+            }));
+          }
         });
 
         // Reset compose fields

@@ -4,12 +4,137 @@ import type { NewsletterCampaign } from '../../lib/supabase';
 import AdminLayout from '../../components/AdminLayout';
 import {
   Mail, Loader2, Search, Eye, X, CheckCircle2, AlertCircle,
-  Calendar, Users, ChevronRight, ChevronLeft, Send,
+  Calendar, Users, ChevronRight, ChevronLeft, Send, Database,
+  Terminal, Copy, RefreshCw,
 } from 'lucide-react';
+
+// ── SQL needed to create the newsletter_campaigns table ───────────────────────
+const MIGRATION_SQL = `CREATE TABLE IF NOT EXISTS public.newsletter_campaigns (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    subject TEXT NOT NULL,
+    content TEXT NOT NULL,
+    content_type TEXT NOT NULL DEFAULT 'markdown',
+    recipient_count INTEGER NOT NULL DEFAULT 0,
+    delivered INTEGER NOT NULL DEFAULT 0,
+    failed INTEGER NOT NULL DEFAULT 0,
+    simulated BOOLEAN NOT NULL DEFAULT false,
+    featured_image_url TEXT,
+    accent_color TEXT,
+    sent_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.newsletter_campaigns ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow authenticated full access on newsletter_campaigns"
+  ON public.newsletter_campaigns FOR ALL
+  USING (auth.role() = 'authenticated');`;
+
+// ── One-time migration banner ─────────────────────────────────────────────────
+function MigrationBanner({ onRetry }: { onRetry: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(MIGRATION_SQL).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  };
+
+  const handleRetry = async () => {
+    setRetrying(true);
+    await onRetry();
+    setRetrying(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-amber-200 overflow-hidden">
+      {/* Header */}
+      <div className="bg-amber-50 px-6 py-5 flex items-start gap-4 border-b border-amber-100">
+        <div className="p-2.5 bg-amber-100 rounded-xl text-amber-600 shrink-0 mt-0.5">
+          <Database size={22} />
+        </div>
+        <div>
+          <h3 className="font-serif font-bold text-deep-brown text-lg leading-tight">
+            One-time database setup required
+          </h3>
+          <p className="text-sm text-taupe mt-1">
+            The <code className="bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded text-xs font-mono">newsletter_campaigns</code> table doesn't exist in your Supabase database yet.
+            Run the SQL below in your{' '}
+            <a
+              href="https://supabase.com/dashboard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline font-medium"
+            >
+              Supabase SQL Editor
+            </a>
+            {' '}to enable newsletter history.
+          </p>
+        </div>
+      </div>
+
+      {/* Steps */}
+      <div className="px-6 py-4 border-b border-amber-100 bg-amber-50/40">
+        <ol className="flex flex-col sm:flex-row gap-3 sm:gap-6">
+          {[
+            { n: '1', text: 'Open your Supabase project → SQL Editor → New query' },
+            { n: '2', text: 'Paste the SQL below and click Run' },
+            { n: '3', text: 'Click "Check Again" to reload this page' },
+          ].map(step => (
+            <li key={step.n} className="flex items-start gap-2.5 text-sm text-taupe">
+              <span className="shrink-0 w-5 h-5 bg-amber-200 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">
+                {step.n}
+              </span>
+              {step.text}
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      {/* SQL block */}
+      <div className="px-6 py-5 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-deep-brown font-bold text-sm">
+            <Terminal size={16} />
+            <span>SQL Script</span>
+          </div>
+          <button
+            onClick={handleCopy}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              copied
+                ? 'bg-emerald-100 text-emerald-700'
+                : 'bg-soft-cream hover:bg-primary/10 text-taupe hover:text-primary'
+            }`}
+          >
+            {copied ? <CheckCircle2 size={13} /> : <Copy size={13} />}
+            {copied ? 'Copied!' : 'Copy SQL'}
+          </button>
+        </div>
+        <pre className="bg-deep-brown text-soft-cream/90 p-5 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed">
+          {MIGRATION_SQL}
+        </pre>
+        <div className="flex justify-end pt-1">
+          <button
+            onClick={handleRetry}
+            disabled={retrying}
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-primary/90 transition-all disabled:opacity-60"
+          >
+            {retrying
+              ? <Loader2 size={15} className="animate-spin" />
+              : <RefreshCw size={15} />}
+            {retrying ? 'Checking…' : 'Check Again'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AdminNewsletterHistory() {
   const [campaigns, setCampaigns] = useState<NewsletterCampaign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tableMissing, setTableMissing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [preview, setPreview] = useState<NewsletterCampaign | null>(null);
 
@@ -20,13 +145,26 @@ export default function AdminNewsletterHistory() {
   // ── Fetch ─────────────────────────────────────────────────────────────────
   const fetchCampaigns = async () => {
     setLoading(true);
+    setTableMissing(false);
     try {
       const { data, error } = await supabase
         .from('newsletter_campaigns')
         .select('*')
         .order('sent_at', { ascending: false });
-      if (error) throw error;
-      setCampaigns(data || []);
+      if (error) {
+        // Postgres "relation does not exist" (42P01) or Supabase "PGRST116" / generic
+        if (
+          error.message?.toLowerCase().includes('relation') ||
+          error.message?.toLowerCase().includes('does not exist') ||
+          error.code === '42P01'
+        ) {
+          setTableMissing(true);
+        } else {
+          throw error;
+        }
+      } else {
+        setCampaigns(data || []);
+      }
     } catch (err: any) {
       console.error('Error fetching newsletter campaigns:', err.message);
     } finally {
@@ -58,7 +196,7 @@ export default function AdminNewsletterHistory() {
         <iframe
           title="Newsletter preview"
           srcDoc={c.content}
-          sandbox="allow-same-origin"
+          sandbox=""
           className="w-full flex-grow border-0 rounded-b-2xl"
           style={{ minHeight: 480 }}
         />
@@ -86,7 +224,11 @@ export default function AdminNewsletterHistory() {
             </div>
           </div>
 
-          {/* ── Summary cards ── */}
+          {/* ── Migration banner (only shown when table is missing) ── */}
+          {tableMissing && <MigrationBanner onRetry={fetchCampaigns} />}
+
+          {/* ── The rest only renders when the table exists ── */}
+          {!tableMissing && (<>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               {
@@ -247,6 +389,7 @@ export default function AdminNewsletterHistory() {
               </div>
             )}
           </div>
+          </>)} {/* end !tableMissing */}
         </div>
       </main>
 

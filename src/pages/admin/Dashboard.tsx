@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const { stats, loading: statsLoading } = useDashboardStats();
   const [isDevToolsOpen, setIsDevToolsOpen] = useState(false);
   const [recentCampaigns, setRecentCampaigns] = useState<NewsletterCampaign[]>([]);
+  const [totalNewsletters, setTotalNewsletters] = useState(0);
   const navigate = useNavigate();
   const authorName = settings?.author_name || "Author";
 
@@ -60,8 +61,13 @@ export default function AdminDashboard() {
     };
   }, [isDevToolsOpen]);
 
-  // Fetch recent newsletter campaigns
+  // Fetch newsletter campaign count + 3 most recent
   useEffect(() => {
+    supabase
+      .from('newsletter_campaigns')
+      .select('*', { count: 'exact', head: true })
+      .then(({ count }) => setTotalNewsletters(count || 0));
+
     supabase
       .from('newsletter_campaigns')
       .select('*')
@@ -74,7 +80,7 @@ export default function AdminDashboard() {
     { label: "Total Books", value: stats?.totalBooks || 0, icon: Book, color: "bg-blue-500" },
     { label: "Blog Posts", value: stats?.totalPosts || 0, icon: PenTool, color: "bg-emerald-500" },
     { label: "Subscribers", value: stats?.totalSubscribers || 0, icon: Users, color: "bg-purple-500" },
-    { label: "Newsletters Sent", value: recentCampaigns.length > 0 ? recentCampaigns.length : 0, icon: Mail, color: "bg-orange-500" },
+    { label: "Newsletters Sent", value: totalNewsletters, icon: Mail, color: "bg-orange-500" },
   ];
 
   if (isDevToolsOpen) {

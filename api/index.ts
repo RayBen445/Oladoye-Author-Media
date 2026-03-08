@@ -277,7 +277,8 @@ async function setupServer() {
         console.log("No SMTP credentials found. Simulating email sending...");
         try {
           // Simulate a brief delay proportional to subscriber count (capped at 3 s)
-          const delay = Math.min(subscribers.length * 300, 3000);
+          const SIMULATED_DELAY_PER_SUBSCRIBER_MS = 300;
+          const delay = Math.min(subscribers.length * SIMULATED_DELAY_PER_SUBSCRIBER_MS, 3000);
           await new Promise(resolve => setTimeout(resolve, delay));
 
           subscribers.forEach(email => {
