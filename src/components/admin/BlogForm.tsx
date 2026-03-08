@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { X, Save, Loader2 } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { X, Save, Loader2, ImagePlus } from 'lucide-react';
 import { supabase, type BlogPost } from '../../lib/supabase';
 import ImageUpload from './ImageUpload';
 
@@ -9,6 +9,103 @@ type BlogFormProps = {
   onSuccess: () => void;
 };
 
+// --------------------------------------------------------------------------
+// Reusable content field with "Insert Image" toolbar
+// --------------------------------------------------------------------------
+type ContentFieldProps = {
+  label: string;
+  value: string | undefined;
+  onChange: (v: string) => void;
+  required?: boolean;
+  rows?: number;
+  placeholder?: string;
+  mono?: boolean;
+};
+
+function ContentField({ label, value, onChange, required, rows = 8, placeholder, mono }: ContentFieldProps) {
+  const [showInsert, setShowInsert] = useState(false);
+  const [pendingUrl, setPendingUrl] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const insertImage = (url: string) => {
+    if (!url) return;
+    const ta = textareaRef.current;
+    const markdown = `\n![image](${url})\n`;
+    if (ta) {
+      const start = ta.selectionStart ?? (value || '').length;
+      const end   = ta.selectionEnd   ?? start;
+      const before = (value || '').substring(0, start);
+      const after  = (value || '').substring(end);
+      onChange(before + markdown + after);
+      // Restore cursor after the inserted snippet
+      setTimeout(() => {
+        ta.focus();
+        ta.selectionStart = ta.selectionEnd = start + markdown.length;
+      }, 0);
+    } else {
+      onChange((value || '') + markdown);
+    }
+    setShowInsert(false);
+    setPendingUrl('');
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <label className="text-xs font-bold text-taupe uppercase tracking-widest">{label}</label>
+        <button
+          type="button"
+          onClick={() => { setShowInsert(v => !v); setPendingUrl(''); }}
+          className="flex items-center space-x-1 text-xs font-bold text-primary hover:text-primary/80 transition-colors"
+        >
+          <ImagePlus size={14} />
+          <span>Insert Image</span>
+        </button>
+      </div>
+
+      {showInsert && (
+        <div className="p-4 bg-soft-cream/50 rounded-xl border border-primary/10 space-y-3">
+          <ImageUpload
+            label="Image to insert"
+            value={pendingUrl}
+            onChange={setPendingUrl}
+          />
+          <div className="flex justify-end space-x-2">
+            <button
+              type="button"
+              onClick={() => setShowInsert(false)}
+              className="px-3 py-1.5 text-taupe text-sm font-bold hover:text-deep-brown transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => insertImage(pendingUrl)}
+              disabled={!pendingUrl}
+              className="px-4 py-1.5 bg-primary text-soft-cream rounded-lg text-sm font-bold disabled:opacity-40 hover:bg-primary/90 transition-colors"
+            >
+              Insert
+            </button>
+          </div>
+        </div>
+      )}
+
+      <textarea
+        ref={textareaRef}
+        required={required}
+        rows={rows}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20 resize-none${mono ? ' font-mono text-sm' : ''}`}
+      />
+    </div>
+  );
+}
+
+// --------------------------------------------------------------------------
+// Main form
+// --------------------------------------------------------------------------
 export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<BlogPost>>(
@@ -66,8 +163,8 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-taupe uppercase tracking-widest">Title</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 required
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -76,8 +173,8 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
             </div>
             <div className="space-y-2">
               <label className="text-xs font-bold text-taupe uppercase tracking-widest">Slug</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 required
                 value={formData.slug}
                 onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
@@ -88,7 +185,7 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
 
           <div className="space-y-2">
             <label className="text-xs font-bold text-taupe uppercase tracking-widest">Excerpt</label>
-            <textarea 
+            <textarea
               rows={2}
               value={formData.excerpt}
               onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
@@ -96,57 +193,51 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-taupe uppercase tracking-widest">Standard Content (Markdown)</label>
-            <textarea 
-              rows={8}
-              required
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20 font-mono text-sm"
-            />
-          </div>
+          <ContentField
+            label="Standard Content (Markdown)"
+            value={formData.content}
+            onChange={(v) => setFormData({ ...formData, content: v })}
+            required
+            rows={10}
+            mono
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-stone-50 rounded-3xl border border-stone-200">
             <div className="space-y-4">
               <h3 className="font-serif font-bold text-deep-brown border-b border-stone-200 pb-2">Advanced Tier</h3>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-taupe uppercase tracking-widest">Advanced Content</label>
-                <textarea 
-                  rows={8}
-                  value={formData.advanced_content}
-                  onChange={(e) => setFormData({ ...formData, advanced_content: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white border-none focus:ring-2 focus:ring-primary/20 font-mono text-sm"
-                  placeholder="Leave empty to use standard content"
-                />
-              </div>
+              <ContentField
+                label="Advanced Content"
+                value={formData.advanced_content}
+                onChange={(v) => setFormData({ ...formData, advanced_content: v })}
+                rows={8}
+                placeholder="Leave empty to use standard content"
+                mono
+              />
             </div>
 
             <div className="space-y-4">
               <h3 className="font-serif font-bold text-deep-brown border-b border-stone-200 pb-2">Premium Tier</h3>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-taupe uppercase tracking-widest">Premium Content</label>
-                <textarea 
-                  rows={8}
-                  value={formData.premium_content}
-                  onChange={(e) => setFormData({ ...formData, premium_content: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white border-none focus:ring-2 focus:ring-primary/20 font-mono text-sm"
-                  placeholder="Leave empty to use standard content"
-                />
-              </div>
+              <ContentField
+                label="Premium Content"
+                value={formData.premium_content}
+                onChange={(v) => setFormData({ ...formData, premium_content: v })}
+                rows={8}
+                placeholder="Leave empty to use standard content"
+                mono
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <ImageUpload 
+            <ImageUpload
               label="Featured Image"
               value={formData.featured_image_url || ''}
               onChange={(url) => setFormData({ ...formData, featured_image_url: url })}
             />
             <div className="space-y-2">
               <label className="text-xs font-bold text-taupe uppercase tracking-widest">Published At</label>
-              <input 
-                type="datetime-local" 
+              <input
+                type="datetime-local"
                 value={formData.published_at?.slice(0, 16)}
                 onChange={(e) => setFormData({ ...formData, published_at: new Date(e.target.value).toISOString() })}
                 className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
@@ -156,8 +247,8 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
 
           <div className="flex items-center space-x-6">
             <label className="flex items-center space-x-3 cursor-pointer">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 checked={formData.published}
                 onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
                 className="w-5 h-5 rounded border-primary/20 text-primary focus:ring-primary/20"
@@ -167,14 +258,14 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
           </div>
 
           <div className="pt-6 border-t border-primary/10 flex justify-end space-x-4">
-            <button 
+            <button
               type="button"
               onClick={onClose}
               className="px-6 py-3 text-taupe font-bold hover:bg-soft-cream rounded-xl transition-colors"
             >
               Cancel
             </button>
-            <button 
+            <button
               type="submit"
               disabled={loading}
               className="px-8 py-3 bg-primary text-soft-cream rounded-xl font-bold flex items-center space-x-2 shadow-lg hover:bg-primary/90 transition-all disabled:opacity-50"
@@ -188,3 +279,4 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
     </div>
   );
 }
+

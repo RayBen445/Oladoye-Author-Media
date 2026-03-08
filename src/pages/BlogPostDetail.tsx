@@ -91,7 +91,29 @@ export default function BlogPostDetail() {
         </div>
 
         <div className="markdown-body prose prose-lg prose-primary max-w-none text-deep-brown/80 leading-relaxed">
-          <ReactMarkdown>{post.content}</ReactMarkdown>
+          <ReactMarkdown
+            components={{
+              img({ src, alt }) {
+                return (
+                  <figure className="my-8">
+                    <img
+                      src={src}
+                      alt={alt || ''}
+                      className="w-full rounded-2xl shadow-lg object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    {alt && (
+                      <figcaption className="mt-3 text-center text-sm text-taupe italic">
+                        {alt}
+                      </figcaption>
+                    )}
+                  </figure>
+                );
+              },
+            }}
+          >
+            {post.content}
+          </ReactMarkdown>
         </div>
 
         <div className="mt-16 pt-12 border-t border-primary/10">
