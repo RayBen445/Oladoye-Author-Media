@@ -19,4 +19,30 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif;
   }
+
+  /* Main navbar height (h-16 = 64px) */
+  :root {
+    --main-navbar-height: 64px;
+  }
+
+  /* Combined height of main navbar (64px) + admin navbar (48px) */
+  :root {
+    --admin-header-offset: 112px;
+  }
+}
+
+/* Utility classes for admin layout measurements */
+@layer utilities {
+  .top-main-sticky {
+    top: var(--main-navbar-height);
+  }
+  .min-h-admin-content {
+    min-height: calc(100vh - var(--admin-header-offset));
+  }
+  .h-admin-content {
+    height: calc(100vh - var(--admin-header-offset));
+  }
+  .top-admin-sticky {
+    top: var(--admin-header-offset);
+  }
 }

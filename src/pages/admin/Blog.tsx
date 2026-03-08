@@ -1,26 +1,32 @@
 import { useState } from "react";
-import AdminSidebar from "../../components/AdminSidebar";
+import AdminLayout from "../../components/AdminLayout";
 import { Plus, Search, Edit, Trash2, Eye, Calendar, User, Loader2 } from "lucide-react";
 import { useBlogPosts } from "../../hooks/useBlogPosts";
 import { supabase, type BlogPost } from "../../lib/supabase";
 import BlogForm from "../../components/admin/BlogForm";
+import { useToast } from "../../components/Toast";
+import ConfirmDialog from "../../components/ConfirmDialog";
 
 export default function AdminBlog() {
   const { posts, loading, refetch } = useBlogPosts();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const filteredPosts = posts.filter(post => 
     post.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
     post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this post?")) return;
+  const handleDeleteConfirmed = async () => {
+    if (!confirmDeleteId) return;
+    const id = confirmDeleteId;
+    setConfirmDeleteId(null);
     const { error } = await supabase.from('blog_posts').delete().eq('id', id);
-    if (error) alert(error.message);
-    else refetch();
+    if (error) showToast(error.message, 'error');
+    else { refetch(); showToast('Post deleted successfully.', 'success'); }
   };
 
   const handleEdit = (post: BlogPost) => {
@@ -29,9 +35,8 @@ export default function AdminBlog() {
   };
 
   return (
-    <div className="flex">
-      <AdminSidebar />
-      <main className="flex-grow p-8 bg-soft-cream/50 min-h-[calc(100vh-64px)]">
+    <AdminLayout>
+      <main className="p-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex justify-between items-center">
             <div>
@@ -112,7 +117,7 @@ export default function AdminBlog() {
                           <Edit size={18} />
                         </button>
                         <button 
-                          onClick={() => handleDelete(post.id)}
+                          onClick={() => setConfirmDeleteId(post.id)}
                           className="p-2 text-taupe hover:text-accent transition-colors hover:bg-accent/5 rounded-lg" 
                           title="Delete"
                         >
@@ -142,12 +147,21 @@ export default function AdminBlog() {
       </main>
 
       {showForm && (
-        <BlogForm 
-          post={editingPost} 
-          onClose={() => setShowForm(false)} 
-          onSuccess={refetch} 
+        <BlogForm
+          post={editingPost}
+          onClose={() => setShowForm(false)}
+          onSuccess={refetch}
         />
       )}
-    </div>
+
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        title="Delete Blog Post"
+        message="Are you sure you want to permanently delete this post? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
+    </AdminLayout>
   );
 }

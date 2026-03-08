@@ -36,14 +36,10 @@ export type Book = {
   slug: string;
   description: string;
   long_description: string;
-  advanced_description?: string;
-  premium_description?: string;
   cover_image_url: string;
   release_date: string;
   genre: string;
   gumroad_link: string;
-  advanced_gumroad_link?: string;
-  premium_gumroad_link?: string;
   featured: boolean;
   order: number;
   created_at: string;
@@ -54,14 +50,26 @@ export type BlogPost = {
   title: string;
   slug: string;
   content: string;
-  advanced_content?: string;
-  premium_content?: string;
   excerpt: string;
   featured_image_url: string;
   author_name: string;
   published: boolean;
   published_at: string;
   created_at: string;
+};
+
+export type NewsletterCampaign = {
+  id: string;
+  subject: string;
+  content: string;
+  content_type: 'markdown' | 'html';
+  recipient_count: number;
+  delivered: number;
+  failed: number;
+  simulated: boolean;
+  featured_image_url: string | null;
+  accent_color: string | null;
+  sent_at: string;
 };
 
 export type SiteSettings = {

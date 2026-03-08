@@ -11,11 +11,13 @@ import AdminBooks from "./pages/admin/Books";
 import AdminBlog from "./pages/admin/Blog";
 import AdminSettings from "./pages/admin/Settings";
 import AdminSubscribers from "./pages/admin/Subscribers";
+import AdminNewsletterHistory from "./pages/admin/NewsletterHistory";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DatabaseSetup from "./components/DatabaseSetup";
 import { useSiteSettings } from "./hooks/useSiteSettings";
 import { Loader2 } from "lucide-react";
+import { ToastProvider } from "./components/Toast";
 
 export default function App() {
   const { error, loading } = useSiteSettings();
@@ -37,30 +39,33 @@ export default function App() {
   }
 
   return (
-    <Router>
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/books" element={<Books />} />
-            <Route path="/books/:slug" element={<BookDetail />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPostDetail />} />
-            <Route path="/login" element={<Login />} />
-            
-            {/* Protected Admin Routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/books" element={<AdminBooks />} />
-              <Route path="/admin/blog" element={<AdminBlog />} />
-              <Route path="/admin/subscribers" element={<AdminSubscribers />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
-            </Route>
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
+    <ToastProvider>
+      <Router>
+        <div className="min-h-screen flex flex-col">
+          <Navbar />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/books" element={<Books />} />
+              <Route path="/books/:slug" element={<BookDetail />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPostDetail />} />
+              <Route path="/login" element={<Login />} />
+              
+              {/* Protected Admin Routes */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/books" element={<AdminBooks />} />
+                <Route path="/admin/blog" element={<AdminBlog />} />
+                <Route path="/admin/subscribers" element={<AdminSubscribers />} />
+                <Route path="/admin/newsletters" element={<AdminNewsletterHistory />} />
+                <Route path="/admin/settings" element={<AdminSettings />} />
+              </Route>
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </Router>
+    </ToastProvider>
   );
 }

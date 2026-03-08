@@ -1,7 +1,9 @@
 import { Database, Terminal, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useState } from 'react';
 
 export default function DatabaseSetup() {
+  const [copied, setCopied] = useState(false);
   const sql = `-- Create Books table
 CREATE TABLE public.books (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -62,11 +64,27 @@ CREATE TABLE IF NOT EXISTS public.subscribers (
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Create Newsletter Campaigns table
+CREATE TABLE IF NOT EXISTS public.newsletter_campaigns (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    subject TEXT NOT NULL,
+    content TEXT NOT NULL,
+    content_type TEXT NOT NULL DEFAULT 'markdown',
+    recipient_count INTEGER NOT NULL DEFAULT 0,
+    delivered INTEGER NOT NULL DEFAULT 0,
+    failed INTEGER NOT NULL DEFAULT 0,
+    simulated BOOLEAN NOT NULL DEFAULT false,
+    featured_image_url TEXT,
+    accent_color TEXT,
+    sent_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- Set up Row Level Security (RLS)
 ALTER TABLE public.books ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscribers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.newsletter_campaigns ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow public read access on books" ON public.books FOR SELECT USING (true);
 CREATE POLICY "Allow public read access on blog_posts" ON public.blog_posts FOR SELECT USING (true);
@@ -77,6 +95,7 @@ CREATE POLICY "Allow authenticated full access on books" ON public.books FOR ALL
 CREATE POLICY "Allow authenticated full access on blog_posts" ON public.blog_posts FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Allow authenticated full access on site_settings" ON public.site_settings FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Allow authenticated full access on subscribers" ON public.subscribers FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated full access on newsletter_campaigns" ON public.newsletter_campaigns FOR ALL USING (auth.role() = 'authenticated');
 
 -- Insert initial site settings
 INSERT INTO public.site_settings (
@@ -96,8 +115,22 @@ INSERT INTO public.site_settings (
 );`;
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(sql);
-    alert('SQL copied to clipboard!');
+    navigator.clipboard.writeText(sql).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }).catch(() => {
+      // Fallback: select a hidden textarea
+      const ta = document.createElement('textarea');
+      ta.value = sql;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
   };
 
   return (
@@ -150,9 +183,17 @@ INSERT INTO public.site_settings (
               </div>
               <button 
                 onClick={copyToClipboard}
-                className="text-xs bg-stone-100 hover:bg-stone-200 text-stone-900 px-3 py-1.5 rounded-lg font-medium transition-colors"
+                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
+                  copied
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-stone-100 hover:bg-stone-200 text-stone-900'
+                }`}
               >
-                Copy SQL
+                {copied ? (
+                  <><CheckCircle2 className="w-3.5 h-3.5" /> Copied!</>
+                ) : (
+                  'Copy SQL'
+                )}
               </button>
             </div>
             <div className="relative">
