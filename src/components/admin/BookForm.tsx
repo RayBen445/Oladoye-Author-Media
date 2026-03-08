@@ -118,6 +118,15 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
               />
             </div>
             <div className="space-y-2">
+              <label className="text-xs font-bold text-taupe uppercase tracking-widest">Author Name</label>
+              <input 
+                type="text" 
+                value={formData.author_name}
+                onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+            <div className="space-y-2">
               <label className="text-xs font-bold text-taupe uppercase tracking-widest">Genre</label>
               <input 
                 type="text" 

@@ -3,11 +3,14 @@ import { motion } from "motion/react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, ShoppingCart, Star, Calendar, BookOpen, Share2, Loader2 } from "lucide-react";
 import { supabase, type Book } from "../lib/supabase";
+import { useToast } from "../components/Toast";
 
 export default function BookDetail() {
   const { slug } = useParams();
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
+  const [favorite, setFavorite] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -24,6 +27,96 @@ export default function BookDetail() {
     };
     fetchBook();
   }, [slug]);
+
+  // Initialize favorite from localStorage once book slug is known
+  useEffect(() => {
+    if (!slug) return;
+    const saved = localStorage.getItem(`favorite-${slug}`);
+    if (saved === 'true') setFavorite(true);
+  }, [slug]);
+
+  // Update document title and OG/Twitter meta tags dynamically
+  useEffect(() => {
+    if (!book) return;
+
+    const siteName = 'Oladoye Author Media';
+    const pageTitle = `${book.title} | ${siteName}`;
+    const description = book.description || '';
+    const image = book.cover_image_url || '';
+    const url = window.location.href;
+
+    const prevTitle = document.title;
+    document.title = pageTitle;
+
+    const metaDefs = [
+      { selector: 'meta[name="description"]',        attrName: 'name',     attrValue: 'description',        content: description },
+      { selector: 'meta[property="og:title"]',       attrName: 'property', attrValue: 'og:title',           content: pageTitle },
+      { selector: 'meta[property="og:description"]', attrName: 'property', attrValue: 'og:description',     content: description },
+      { selector: 'meta[property="og:image"]',       attrName: 'property', attrValue: 'og:image',           content: image },
+      { selector: 'meta[property="og:url"]',         attrName: 'property', attrValue: 'og:url',             content: url },
+      { selector: 'meta[property="og:type"]',        attrName: 'property', attrValue: 'og:type',            content: 'article' },
+      { selector: 'meta[name="twitter:card"]',       attrName: 'name',     attrValue: 'twitter:card',       content: 'summary_large_image' },
+      { selector: 'meta[name="twitter:title"]',      attrName: 'name',     attrValue: 'twitter:title',      content: pageTitle },
+      { selector: 'meta[name="twitter:description"]',attrName: 'name',     attrValue: 'twitter:description',content: description },
+      { selector: 'meta[name="twitter:image"]',      attrName: 'name',     attrValue: 'twitter:image',      content: image },
+    ];
+
+    const CREATED = '__CREATED__';
+    const prevContents: string[] = [];
+
+    for (const { selector, attrName, attrValue, content } of metaDefs) {
+      let el = document.querySelector<HTMLMetaElement>(selector);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute(attrName, attrValue);
+        document.head.appendChild(el);
+        prevContents.push(CREATED);
+      } else {
+        prevContents.push(el.getAttribute('content') ?? '');
+      }
+      el.setAttribute('content', content);
+    }
+
+    return () => {
+      document.title = prevTitle;
+      metaDefs.forEach(({ selector }, idx) => {
+        const el = document.querySelector<HTMLMetaElement>(selector);
+        if (!el) return;
+        if (prevContents[idx] === CREATED) {
+          el.remove();
+        } else {
+          el.setAttribute('content', prevContents[idx]);
+        }
+      });
+    };
+  }, [book]);
+
+  const shareBook = async () => {
+    if (!book) return;
+    const shareData = {
+      title: book.title,
+      text: book.description,
+      url: window.location.href,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        showToast('Link copied to clipboard', 'success');
+      }
+    } catch (_err) {
+      // User cancelled share or clipboard access was denied — silently ignore
+    }
+  };
+
+  const toggleFavorite = () => {
+    if (!slug) return;
+    const newState = !favorite;
+    setFavorite(newState);
+    localStorage.setItem(`favorite-${slug}`, String(newState));
+    showToast(newState ? 'Added to favorites' : 'Removed from favorites', newState ? 'success' : 'info');
+  };
 
   if (loading) {
     return (
@@ -77,11 +170,19 @@ export default function BookDetail() {
           <div className="absolute -inset-4 bg-primary/10 rounded-3xl blur-2xl -z-10" />
           
           <div className="mt-8 flex justify-center space-x-4">
-            <button className="p-3 bg-white rounded-full shadow-md hover:text-primary transition-colors">
+            <button
+              onClick={shareBook}
+              className="p-3 bg-white rounded-full shadow-md hover:text-primary transition-colors"
+              title="Share this book"
+            >
               <Share2 size={20} />
             </button>
-            <button className="p-3 bg-white rounded-full shadow-md hover:text-accent transition-colors">
-              <Star size={20} />
+            <button
+              onClick={toggleFavorite}
+              className={`p-3 bg-white rounded-full shadow-md transition-colors ${favorite ? 'text-accent' : 'hover:text-accent'}`}
+              title={favorite ? 'Remove from favorites' : 'Add to favorites'}
+            >
+              <Star size={20} fill={favorite ? 'currentColor' : 'none'} />
             </button>
           </div>
         </motion.div>
