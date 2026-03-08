@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Lora", "Merriweather", serif;
+  --font-sans: "Inter", "Geist", "Poppins", sans-serif;
+
+  --color-primary: #8B6F47;
+  --color-secondary: #F5E6D3;
+  --color-accent: #D97457;
+  --color-deep-brown: #3E2723;
+  --color-soft-cream: #FBF7F0;
+  --color-taupe: #A89968;
+}
+
+@layer base {
+  body {
+    @apply bg-soft-cream text-deep-brown font-sans;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}

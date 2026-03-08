@@ -1,0 +1,190 @@
+import { useState } from 'react';
+import { X, Save, Loader2 } from 'lucide-react';
+import { supabase, type BlogPost } from '../../lib/supabase';
+import ImageUpload from './ImageUpload';
+
+type BlogFormProps = {
+  post?: BlogPost | null;
+  onClose: () => void;
+  onSuccess: () => void;
+};
+
+export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<Partial<BlogPost>>(
+    post || {
+      title: '',
+      slug: '',
+      content: '',
+      excerpt: '',
+      featured_image_url: '',
+      author_name: 'Lumina',
+      published: true,
+      published_at: new Date().toISOString(),
+    }
+  );
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (post?.id) {
+        const { error } = await supabase
+          .from('blog_posts')
+          .update(formData)
+          .eq('id', post.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('blog_posts')
+          .insert([formData]);
+        if (error) throw error;
+      }
+      onSuccess();
+      onClose();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="p-6 border-b border-primary/10 flex justify-between items-center sticky top-0 bg-white z-10">
+          <h2 className="text-2xl font-serif font-bold text-deep-brown">
+            {post ? 'Edit Post' : 'New Blog Post'}
+          </h2>
+          <button onClick={onClose} className="p-2 hover:bg-soft-cream rounded-full transition-colors">
+            <X size={24} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-taupe uppercase tracking-widest">Title</label>
+              <input 
+                type="text" 
+                required
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-taupe uppercase tracking-widest">Slug</label>
+              <input 
+                type="text" 
+                required
+                value={formData.slug}
+                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-taupe uppercase tracking-widest">Excerpt</label>
+            <textarea 
+              rows={2}
+              value={formData.excerpt}
+              onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20 resize-none"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-taupe uppercase tracking-widest">Standard Content (Markdown)</label>
+            <textarea 
+              rows={8}
+              required
+              value={formData.content}
+              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20 font-mono text-sm"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-stone-50 rounded-3xl border border-stone-200">
+            <div className="space-y-4">
+              <h3 className="font-serif font-bold text-deep-brown border-b border-stone-200 pb-2">Advanced Tier</h3>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-taupe uppercase tracking-widest">Advanced Content</label>
+                <textarea 
+                  rows={8}
+                  value={formData.advanced_content}
+                  onChange={(e) => setFormData({ ...formData, advanced_content: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl bg-white border-none focus:ring-2 focus:ring-primary/20 font-mono text-sm"
+                  placeholder="Leave empty to use standard content"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="font-serif font-bold text-deep-brown border-b border-stone-200 pb-2">Premium Tier</h3>
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-taupe uppercase tracking-widest">Premium Content</label>
+                <textarea 
+                  rows={8}
+                  value={formData.premium_content}
+                  onChange={(e) => setFormData({ ...formData, premium_content: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl bg-white border-none focus:ring-2 focus:ring-primary/20 font-mono text-sm"
+                  placeholder="Leave empty to use standard content"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ImageUpload 
+              label="Featured Image"
+              value={formData.featured_image_url || ''}
+              onChange={(url) => setFormData({ ...formData, featured_image_url: url })}
+            />
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-taupe uppercase tracking-widest">Published At</label>
+              <input 
+                type="datetime-local" 
+                value={formData.published_at?.slice(0, 16)}
+                onChange={(e) => setFormData({ ...formData, published_at: new Date(e.target.value).toISOString() })}
+                className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-6">
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input 
+                type="checkbox" 
+                checked={formData.published}
+                onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
+                className="w-5 h-5 rounded border-primary/20 text-primary focus:ring-primary/20"
+              />
+              <span className="text-sm font-bold text-deep-brown">Published</span>
+            </label>
+          </div>
+
+          <div className="pt-6 border-t border-primary/10 flex justify-end space-x-4">
+            <button 
+              type="button"
+              onClick={onClose}
+              className="px-6 py-3 text-taupe font-bold hover:bg-soft-cream rounded-xl transition-colors"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              disabled={loading}
+              className="px-8 py-3 bg-primary text-soft-cream rounded-xl font-bold flex items-center space-x-2 shadow-lg hover:bg-primary/90 transition-all disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+              <span>{post ? 'Update Post' : 'Publish Post'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
