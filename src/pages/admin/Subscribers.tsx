@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import AdminLayout from '../../components/AdminLayout';
 import { Mail, Trash2, Loader2, Search, Download, Send, X, Sparkles } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
+import { useSiteSettings } from '../../hooks/useSiteSettings';
 
 interface Subscriber {
   id: string;
@@ -11,6 +12,7 @@ interface Subscriber {
 }
 
 export default function AdminSubscribers() {
+  const { settings } = useSiteSettings();
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -91,7 +93,9 @@ export default function AdminSubscribers() {
         body: JSON.stringify({
           subject,
           content,
-          subscribers: subscribers.map(s => s.email)
+          subscribers: subscribers.map(s => s.email),
+          siteName: settings?.site_name || 'Oladoye Author Media',
+          authorName: settings?.author_name || 'The Author',
         })
       });
 
