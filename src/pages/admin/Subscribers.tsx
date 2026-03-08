@@ -5,6 +5,8 @@ import AdminLayout from '../../components/AdminLayout';
 import { Mail, Trash2, Loader2, Search, Download, Send, X, Sparkles, Image as ImageIcon, Palette, Users, CheckSquare, Square, ChevronRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { useSiteSettings } from '../../hooks/useSiteSettings';
+import { useToast } from '../../components/Toast';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 interface Subscriber {
   id: string;
@@ -146,12 +148,14 @@ function SendProgressPanel({
 
 export default function AdminSubscribers() {
   const { settings } = useSiteSettings();
+  const { showToast } = useToast();
 
   // ── List state ──────────────────────────────────────────────────────────
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // ── Modal state ──────────────────────────────────────────────────────────
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -290,15 +294,18 @@ export default function AdminSubscribers() {
   };
 
   // ── Delete ────────────────────────────────────────────────────────────────
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to remove this subscriber?')) return;
+  const handleDeleteConfirmed = async () => {
+    if (!confirmDeleteId) return;
+    const id = confirmDeleteId;
+    setConfirmDeleteId(null);
     try {
       const { error } = await supabase.from('subscribers').delete().eq('id', id);
       if (error) throw error;
       setSubscribers(prev => prev.filter(s => s.id !== id));
       setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
+      showToast('Subscriber removed.', 'success');
     } catch (error: any) {
-      alert('Error deleting subscriber: ' + error.message);
+      showToast('Error deleting subscriber: ' + error.message, 'error');
     }
   };
 
@@ -477,7 +484,7 @@ export default function AdminSubscribers() {
       setModalTab('compose');
     } catch (error: any) {
       console.error('Error generating draft:', error);
-      alert('Failed to generate draft. Please try again.');
+      showToast('Failed to generate draft. Please try again.', 'error');
     } finally {
       setGenerating(false);
     }
@@ -583,7 +590,7 @@ export default function AdminSubscribers() {
                         </td>
                         <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
                           <button
-                            onClick={() => handleDelete(subscriber.id)}
+                            onClick={() => setConfirmDeleteId(subscriber.id)}
                             className="p-2 text-accent hover:bg-accent/5 rounded-lg transition-colors"
                             title="Remove Subscriber"
                           >
@@ -881,6 +888,15 @@ export default function AdminSubscribers() {
       {sendProgress.phase !== 'idle' && (
         <SendProgressPanel progress={sendProgress} onClose={closeSendProgress} />
       )}
+
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        title="Remove Subscriber"
+        message="Are you sure you want to permanently remove this subscriber? They will no longer receive newsletters."
+        confirmLabel="Remove"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </AdminLayout>
   );
 }

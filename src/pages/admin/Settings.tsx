@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import AdminLayout from "../../components/AdminLayout";
-import { Save, User, Mail, Globe, Twitter, Instagram, Facebook, Linkedin, Loader2, CheckCircle, Quote } from "lucide-react";
+import { Save, User, Mail, Globe, Twitter, Instagram, Facebook, Linkedin, Loader2, CheckCircle, Quote, AlertCircle } from "lucide-react";
 import { useSiteSettings } from "../../hooks/useSiteSettings";
 import ImageUpload from "../../components/admin/ImageUpload";
 
@@ -26,6 +26,7 @@ export default function AdminSettings() {
   });
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showError, setShowError] = useState<string | null>(null);
 
   useEffect(() => {
     if (settings) {
@@ -53,13 +54,15 @@ export default function AdminSettings() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setShowError(null);
     const { success, error } = await updateSettings(formData);
     setSaving(false);
     if (success) {
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } else {
-      alert(error);
+      setShowError(error ?? 'Failed to save settings.');
+      setTimeout(() => setShowError(null), 6000);
     }
   };
 
@@ -87,6 +90,12 @@ export default function AdminSettings() {
                 <span className="flex items-center space-x-2 text-emerald-600 font-bold text-sm animate-in fade-in slide-in-from-right-4">
                   <CheckCircle size={18} />
                   <span>Settings saved successfully!</span>
+                </span>
+              )}
+              {showError && (
+                <span className="flex items-center space-x-2 text-red-600 font-bold text-sm animate-in fade-in slide-in-from-right-4">
+                  <AlertCircle size={18} />
+                  <span>{showError}</span>
                 </span>
               )}
               <button 

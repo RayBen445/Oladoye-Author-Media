@@ -1,7 +1,9 @@
 import { Database, Terminal, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useState } from 'react';
 
 export default function DatabaseSetup() {
+  const [copied, setCopied] = useState(false);
   const sql = `-- Create Books table
 CREATE TABLE public.books (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -113,8 +115,22 @@ INSERT INTO public.site_settings (
 );`;
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(sql);
-    alert('SQL copied to clipboard!');
+    navigator.clipboard.writeText(sql).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    }).catch(() => {
+      // Fallback: select a hidden textarea
+      const ta = document.createElement('textarea');
+      ta.value = sql;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
   };
 
   return (
@@ -167,9 +183,17 @@ INSERT INTO public.site_settings (
               </div>
               <button 
                 onClick={copyToClipboard}
-                className="text-xs bg-stone-100 hover:bg-stone-200 text-stone-900 px-3 py-1.5 rounded-lg font-medium transition-colors"
+                className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
+                  copied
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'bg-stone-100 hover:bg-stone-200 text-stone-900'
+                }`}
               >
-                Copy SQL
+                {copied ? (
+                  <><CheckCircle2 className="w-3.5 h-3.5" /> Copied!</>
+                ) : (
+                  'Copy SQL'
+                )}
               </button>
             </div>
             <div className="relative">

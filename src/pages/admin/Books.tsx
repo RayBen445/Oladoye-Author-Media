@@ -1,26 +1,32 @@
 import { useState } from "react";
 import AdminLayout from "../../components/AdminLayout";
-import { Plus, Search, MoreVertical, Edit, Trash2, Loader2 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Loader2 } from "lucide-react";
 import { useBooks } from "../../hooks/useBooks";
 import { supabase, type Book } from "../../lib/supabase";
 import BookForm from "../../components/admin/BookForm";
+import { useToast } from "../../components/Toast";
+import ConfirmDialog from "../../components/ConfirmDialog";
 
 export default function AdminBooks() {
   const { books, loading, refetch } = useBooks();
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const filteredBooks = books.filter(book => 
     book.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
     book.genre.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this book?")) return;
+  const handleDeleteConfirmed = async () => {
+    if (!confirmDeleteId) return;
+    const id = confirmDeleteId;
+    setConfirmDeleteId(null);
     const { error } = await supabase.from('books').delete().eq('id', id);
-    if (error) alert(error.message);
-    else refetch();
+    if (error) showToast(error.message, 'error');
+    else { refetch(); showToast('Book deleted successfully.', 'success'); }
   };
 
   const handleEdit = (book: Book) => {
@@ -118,7 +124,7 @@ export default function AdminBooks() {
                             <Edit size={18} />
                           </button>
                           <button 
-                            onClick={() => handleDelete(book.id)}
+                            onClick={() => setConfirmDeleteId(book.id)}
                             className="p-2 text-taupe hover:text-accent transition-colors hover:bg-accent/5 rounded-lg"
                           >
                             <Trash2 size={18} />
@@ -146,6 +152,15 @@ export default function AdminBooks() {
           onSuccess={refetch}
         />
       )}
+
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        title="Delete Book"
+        message="Are you sure you want to permanently delete this book? This action cannot be undone."
+        confirmLabel="Delete"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </AdminLayout>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { X, Save, Loader2, ImagePlus } from 'lucide-react';
+import { X, Save, Loader2, ImagePlus, AlertCircle } from 'lucide-react';
 import { supabase, type BlogPost } from '../../lib/supabase';
 import ImageUpload from './ImageUpload';
 
@@ -108,6 +108,7 @@ function ContentField({ label, value, onChange, required, rows = 8, placeholder,
 // --------------------------------------------------------------------------
 export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<BlogPost>>(
     post || {
       title: '',
@@ -124,6 +125,7 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setFormError(null);
 
     try {
       if (post?.id) {
@@ -141,7 +143,7 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
       onSuccess();
       onClose();
     } catch (err: any) {
-      alert(err.message);
+      setFormError(err.message);
     } finally {
       setLoading(false);
     }
@@ -160,6 +162,12 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          {formError && (
+            <div className="flex items-start gap-3 px-4 py-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-800">
+              <AlertCircle size={18} className="shrink-0 mt-0.5 text-red-500" />
+              <p className="text-sm font-semibold leading-snug">{formError}</p>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-xs font-bold text-taupe uppercase tracking-widest">Title</label>
