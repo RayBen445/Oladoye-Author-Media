@@ -31,6 +31,7 @@ export default function AdminSubscribers() {
   // ── Compose state ────────────────────────────────────────────────────────
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
+  const [contentType, setContentType] = useState<'markdown' | 'html'>('markdown');
   const [featuredImageUrl, setFeaturedImageUrl] = useState('');
   const [accentColor, setAccentColor] = useState('#8B6F47');
   const [sending, setSending] = useState(false);
@@ -181,6 +182,7 @@ export default function AdminSubscribers() {
         body: JSON.stringify({
           subject,
           content,
+          contentType,
           subscribers: recipientEmails,
           siteName: settings?.site_name || 'Oladoye Author Media',
           authorName: settings?.author_name || 'The Author',
@@ -199,6 +201,7 @@ export default function AdminSubscribers() {
         setIsModalOpen(false);
         setSubject('');
         setContent('');
+        setContentType('markdown');
         setFeaturedImageUrl('');
         setAccentColor('#8B6F47');
       } else {
@@ -509,15 +512,48 @@ export default function AdminSubscribers() {
 
                   {/* Content */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-taupe uppercase tracking-widest">Email Content (Markdown)</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-taupe uppercase tracking-widest">Email Content</label>
+                      <div className="flex items-center bg-soft-cream/50 rounded-lg p-0.5 border border-primary/10">
+                        <button
+                          type="button"
+                          onClick={() => setContentType('markdown')}
+                          className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                            contentType === 'markdown'
+                              ? 'bg-primary text-white shadow-sm'
+                              : 'text-taupe hover:text-deep-brown'
+                          }`}
+                        >
+                          Markdown
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setContentType('html')}
+                          className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                            contentType === 'html'
+                              ? 'bg-primary text-white shadow-sm'
+                              : 'text-taupe hover:text-deep-brown'
+                          }`}
+                        >
+                          HTML
+                        </button>
+                      </div>
+                    </div>
                     <textarea
                       required
                       rows={10}
                       value={content}
                       onChange={e => setContent(e.target.value)}
-                      placeholder="Write your update here…"
-                      className="w-full px-4 py-3 bg-soft-cream/30 border-none rounded-xl focus:ring-2 focus:ring-primary/20 font-medium resize-none"
+                      placeholder={contentType === 'html'
+                        ? '<p>Write your update here…</p>'
+                        : 'Write your update here…'}
+                      className={`w-full px-4 py-3 bg-soft-cream/30 border-none rounded-xl focus:ring-2 focus:ring-primary/20 font-medium resize-none${contentType === 'html' ? ' font-mono text-sm' : ''}`}
                     />
+                    {contentType === 'html' && (
+                      <p className="text-xs text-taupe">
+                        HTML will be embedded directly into the email body — inline styles are recommended for broad email-client compatibility.
+                      </p>
+                    )}
                   </div>
 
                   {/* Customisation row */}

@@ -94,13 +94,12 @@ function markdownToHtml(md: string): string {
 /** Build a full, branded HTML email. */
 function buildNewsletterHtml(
   subject: string,
-  content: string,
+  bodyHtml: string,
   siteName: string,
   authorName: string,
   featuredImageUrl?: string,
   accentColor?: string
 ): string {
-  const bodyHtml = markdownToHtml(content);
   const year = new Date().getFullYear();
   const headerBg = accentColor || "#8B6F47";
 
@@ -201,6 +200,7 @@ async function setupServer() {
       const {
         subject,
         content,
+        contentType = "markdown",
         subscribers,
         siteName = "Oladoye Author Media",
         authorName = "The Author",
@@ -216,7 +216,16 @@ async function setupServer() {
 
       const { EMAIL_HOST, EMAIL_PORT, EMAIL_USER, EMAIL_PASS, EMAIL_FROM } = process.env;
 
-      const htmlBody = buildNewsletterHtml(subject, content, siteName, authorName, featuredImageUrl, accentColor);
+      // Use the content as HTML directly when the caller signals HTML mode;
+      // otherwise convert Markdown → HTML as before.
+      // Note: this endpoint is only reachable by authenticated admin users
+      // (ProtectedRoute on the frontend). The HTML is embedded in outbound
+      // emails, not rendered inside the app, so the admin is trusted to supply
+      // safe content (same trust level as writing raw Markdown today).
+      const bodyHtml = contentType === "html"
+        ? content
+        : markdownToHtml(content);
+      const htmlBody = buildNewsletterHtml(subject, bodyHtml, siteName, authorName, featuredImageUrl, accentColor);
 
       // Check if SMTP credentials are provided
       if (EMAIL_HOST && EMAIL_USER && EMAIL_PASS) {
