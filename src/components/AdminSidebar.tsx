@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Book, PenTool, Settings, LogOut, ExternalLink, Users, X } from "lucide-react";
+import { LayoutDashboard, Book, PenTool, Settings, LogOut, ExternalLink, Users, X, Mail } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 interface AdminSidebarProps {
@@ -25,6 +25,7 @@ export default function AdminSidebar({ mobileOpen = false, onClose }: AdminSideb
     { icon: Book, label: "Manage Books", path: "/admin/books" },
     { icon: PenTool, label: "Manage Blog", path: "/admin/blog" },
     { icon: Users, label: "Subscribers", path: "/admin/subscribers" },
+    { icon: Mail, label: "Newsletters", path: "/admin/newsletters" },
     { icon: Settings, label: "Site Settings", path: "/admin/settings" },
   ];
 

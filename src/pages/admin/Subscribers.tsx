@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
+import type { NewsletterCampaign } from '../../lib/supabase';
 import AdminLayout from '../../components/AdminLayout';
 import { Mail, Trash2, Loader2, Search, Download, Send, X, Sparkles, Image as ImageIcon, Palette, Users, CheckSquare, Square, ChevronRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
@@ -379,15 +380,34 @@ export default function AdminSubscribers() {
 
       const data = await response.json();
       if (data.success) {
+        const delivered = data.delivered ?? total;
+        const failed = data.failed ?? 0;
+
         setSendProgress({
           phase: 'done',
           total,
           current: total,
-          delivered: data.delivered ?? total,
-          failed: data.failed ?? 0,
+          delivered,
+          failed,
           simulated: data.simulated,
           siteName,
         });
+
+        // Persist the campaign to Supabase (best-effort; ignore errors)
+        supabase.from('newsletter_campaigns').insert([{
+          subject,
+          content,
+          content_type: contentType,
+          recipient_count: total,
+          delivered,
+          failed,
+          simulated: !!data.simulated,
+          featured_image_url: featuredImageUrl || null,
+          accent_color: accentColor !== '#8B6F47' ? accentColor : null,
+        } satisfies Omit<NewsletterCampaign, 'id' | 'sent_at'>]).then(({ error: dbErr }) => {
+          if (dbErr) console.warn('Could not save campaign record:', dbErr.message);
+        });
+
         // Reset compose fields
         setSubject('');
         setContent('');

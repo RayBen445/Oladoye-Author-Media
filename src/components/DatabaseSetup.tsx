@@ -62,11 +62,27 @@ CREATE TABLE IF NOT EXISTS public.subscribers (
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- Create Newsletter Campaigns table
+CREATE TABLE IF NOT EXISTS public.newsletter_campaigns (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    subject TEXT NOT NULL,
+    content TEXT NOT NULL,
+    content_type TEXT NOT NULL DEFAULT 'markdown',
+    recipient_count INTEGER NOT NULL DEFAULT 0,
+    delivered INTEGER NOT NULL DEFAULT 0,
+    failed INTEGER NOT NULL DEFAULT 0,
+    simulated BOOLEAN NOT NULL DEFAULT false,
+    featured_image_url TEXT,
+    accent_color TEXT,
+    sent_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- Set up Row Level Security (RLS)
 ALTER TABLE public.books ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscribers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.newsletter_campaigns ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Allow public read access on books" ON public.books FOR SELECT USING (true);
 CREATE POLICY "Allow public read access on blog_posts" ON public.blog_posts FOR SELECT USING (true);
@@ -77,6 +93,7 @@ CREATE POLICY "Allow authenticated full access on books" ON public.books FOR ALL
 CREATE POLICY "Allow authenticated full access on blog_posts" ON public.blog_posts FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Allow authenticated full access on site_settings" ON public.site_settings FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Allow authenticated full access on subscribers" ON public.subscribers FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated full access on newsletter_campaigns" ON public.newsletter_campaigns FOR ALL USING (auth.role() = 'authenticated');
 
 -- Insert initial site settings
 INSERT INTO public.site_settings (

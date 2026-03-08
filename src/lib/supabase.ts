@@ -58,6 +58,20 @@ export type BlogPost = {
   created_at: string;
 };
 
+export type NewsletterCampaign = {
+  id: string;
+  subject: string;
+  content: string;
+  content_type: 'markdown' | 'html';
+  recipient_count: number;
+  delivered: number;
+  failed: number;
+  simulated: boolean;
+  featured_image_url: string | null;
+  accent_color: string | null;
+  sent_at: string;
+};
+
 export type SiteSettings = {
   id: string;
   site_name: string;

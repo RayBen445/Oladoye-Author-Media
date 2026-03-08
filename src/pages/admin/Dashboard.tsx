@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import AdminLayout from "../../components/AdminLayout";
-import { Book, PenTool, Users, TrendingUp, Plus, ArrowRight, Loader2, ShieldAlert, XCircle } from "lucide-react";
+import { Book, PenTool, Users, TrendingUp, Plus, ArrowRight, Loader2, ShieldAlert, XCircle, Mail } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSiteSettings } from "../../hooks/useSiteSettings";
 import { useDashboardStats } from "../../hooks/useDashboardStats";
+import { supabase } from "../../lib/supabase";
+import type { NewsletterCampaign } from "../../lib/supabase";
 
 export default function AdminDashboard() {
   const { settings } = useSiteSettings();
   const { stats, loading: statsLoading } = useDashboardStats();
   const [isDevToolsOpen, setIsDevToolsOpen] = useState(false);
+  const [recentCampaigns, setRecentCampaigns] = useState<NewsletterCampaign[]>([]);
   const navigate = useNavigate();
   const authorName = settings?.author_name || "Author";
 
@@ -57,11 +60,21 @@ export default function AdminDashboard() {
     };
   }, [isDevToolsOpen]);
 
+  // Fetch recent newsletter campaigns
+  useEffect(() => {
+    supabase
+      .from('newsletter_campaigns')
+      .select('*')
+      .order('sent_at', { ascending: false })
+      .limit(3)
+      .then(({ data }) => setRecentCampaigns(data || []));
+  }, []);
+
   const statCards = [
     { label: "Total Books", value: stats?.totalBooks || 0, icon: Book, color: "bg-blue-500" },
     { label: "Blog Posts", value: stats?.totalPosts || 0, icon: PenTool, color: "bg-emerald-500" },
     { label: "Subscribers", value: stats?.totalSubscribers || 0, icon: Users, color: "bg-purple-500" },
-    { label: "Engagement", value: "High", icon: TrendingUp, color: "bg-orange-500" },
+    { label: "Newsletters Sent", value: recentCampaigns.length > 0 ? recentCampaigns.length : 0, icon: Mail, color: "bg-orange-500" },
   ];
 
   if (isDevToolsOpen) {
@@ -206,6 +219,51 @@ export default function AdminDashboard() {
                   ))
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* ── Recent Newsletter Campaigns ── */}
+          <div className="bg-white rounded-2xl shadow-sm border border-primary/5 p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-serif font-bold text-deep-brown">Recent Newsletters</h2>
+              <Link to="/admin/newsletters" className="text-primary text-sm font-bold hover:underline flex items-center space-x-1">
+                <span>View All</span>
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {recentCampaigns.length === 0 ? (
+                <p className="text-taupe text-sm italic py-4">No newsletters sent yet.</p>
+              ) : (
+                recentCampaigns.map(campaign => (
+                  <Link
+                    key={campaign.id}
+                    to="/admin/newsletters"
+                    className="flex items-center gap-4 p-3 hover:bg-soft-cream/50 rounded-xl transition-colors group"
+                  >
+                    <div className="p-2.5 bg-primary/8 rounded-xl text-primary shrink-0">
+                      <Mail size={18} />
+                    </div>
+                    <div className="flex-grow min-w-0">
+                      <h3 className="font-bold text-deep-brown group-hover:text-primary transition-colors truncate">
+                        {campaign.subject}
+                      </h3>
+                      <p className="text-xs text-taupe font-medium">
+                        {new Date(campaign.sent_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        {' · '}
+                        {campaign.recipient_count} recipient{campaign.recipient_count !== 1 ? 's' : ''}
+                        {' · '}
+                        {campaign.delivered} delivered
+                      </p>
+                    </div>
+                    <span className={`shrink-0 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                      campaign.simulated ? 'bg-gray-100 text-gray-500' : 'bg-emerald-100 text-emerald-700'
+                    }`}>
+                      {campaign.simulated ? 'Simulated' : 'Sent'}
+                    </span>
+                  </Link>
+                ))
+              )}
             </div>
           </div>
         </div>
