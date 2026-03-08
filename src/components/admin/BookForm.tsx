@@ -22,8 +22,6 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
       release_date: new Date().toISOString().split('T')[0],
       genre: 'Fantasy',
       gumroad_link: '',
-      advanced_gumroad_link: '',
-      premium_gumroad_link: '',
       featured: false,
       order: 0,
     }
@@ -129,56 +127,6 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-stone-50 rounded-3xl border border-stone-200">
-            <div className="space-y-6">
-              <h3 className="font-serif font-bold text-deep-brown border-b border-stone-200 pb-2">Advanced Tier</h3>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-taupe uppercase tracking-widest">Advanced Description</label>
-                <textarea 
-                  rows={4}
-                  value={formData.advanced_description}
-                  onChange={(e) => setFormData({ ...formData, advanced_description: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white border-none focus:ring-2 focus:ring-primary/20 resize-none"
-                  placeholder="Leave empty to use standard description"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-taupe uppercase tracking-widest">Advanced Gumroad Link</label>
-                <input 
-                  type="url" 
-                  value={formData.advanced_gumroad_link}
-                  onChange={(e) => setFormData({ ...formData, advanced_gumroad_link: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white border-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="Leave empty to use standard link"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <h3 className="font-serif font-bold text-deep-brown border-b border-stone-200 pb-2">Premium Tier</h3>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-taupe uppercase tracking-widest">Premium Description</label>
-                <textarea 
-                  rows={4}
-                  value={formData.premium_description}
-                  onChange={(e) => setFormData({ ...formData, premium_description: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white border-none focus:ring-2 focus:ring-primary/20 resize-none"
-                  placeholder="Leave empty to use standard description"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-taupe uppercase tracking-widest">Premium Gumroad Link</label>
-                <input 
-                  type="url" 
-                  value={formData.premium_gumroad_link}
-                  onChange={(e) => setFormData({ ...formData, premium_gumroad_link: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-white border-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="Leave empty to use standard link"
-                />
-              </div>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <ImageUpload 
               label="Cover Image"
@@ -186,7 +134,7 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
               onChange={(url) => setFormData({ ...formData, cover_image_url: url })}
             />
             <div className="space-y-2">
-              <label className="text-xs font-bold text-taupe uppercase tracking-widest">Standard Gumroad Link</label>
+              <label className="text-xs font-bold text-taupe uppercase tracking-widest">Gumroad Link</label>
               <input 
                 type="url" 
                 value={formData.gumroad_link}

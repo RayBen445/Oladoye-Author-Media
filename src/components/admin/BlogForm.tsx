@@ -202,32 +202,6 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
             mono
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-6 bg-stone-50 rounded-3xl border border-stone-200">
-            <div className="space-y-4">
-              <h3 className="font-serif font-bold text-deep-brown border-b border-stone-200 pb-2">Advanced Tier</h3>
-              <ContentField
-                label="Advanced Content"
-                value={formData.advanced_content}
-                onChange={(v) => setFormData({ ...formData, advanced_content: v })}
-                rows={8}
-                placeholder="Leave empty to use standard content"
-                mono
-              />
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="font-serif font-bold text-deep-brown border-b border-stone-200 pb-2">Premium Tier</h3>
-              <ContentField
-                label="Premium Content"
-                value={formData.premium_content}
-                onChange={(v) => setFormData({ ...formData, premium_content: v })}
-                rows={8}
-                placeholder="Leave empty to use standard content"
-                mono
-              />
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <ImageUpload
               label="Featured Image"

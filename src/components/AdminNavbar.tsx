@@ -22,7 +22,7 @@ export default function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
   };
 
   return (
-    <header className="bg-white border-b border-primary/10 sticky top-16 z-40 h-12 flex items-center px-4 lg:px-6">
+    <header className="bg-white border-b border-primary/10 sticky top-main-sticky z-40 h-12 flex items-center px-4 lg:px-6">
       {/* Hamburger — mobile only */}
       <button
         onClick={onMenuClick}
