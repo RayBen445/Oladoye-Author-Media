@@ -3,14 +3,21 @@ import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
 import { uploadImage } from '../../lib/supabase';
 import { useToast } from '../Toast';
 
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_FORMATS_LABEL = 'JPG, PNG, WEBP';
+
 type ImageUploadProps = {
   value: string;
   onChange: (url: string) => void;
   label: string;
   bucket?: string;
+  maxSizeMB?: number;
+  restrictFormats?: boolean;
+  hint?: string;
+  aspectRatio?: string;
 };
 
-export default function ImageUpload({ value, onChange, label, bucket = 'images' }: ImageUploadProps) {
+export default function ImageUpload({ value, onChange, label, bucket = 'images', maxSizeMB, restrictFormats, hint, aspectRatio }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useToast();
@@ -18,6 +25,18 @@ export default function ImageUpload({ value, onChange, label, bucket = 'images' 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (maxSizeMB !== undefined && file.size > maxSizeMB * 1024 * 1024) {
+      showToast(`${label} must be under ${maxSizeMB}MB.`, 'error');
+      e.target.value = '';
+      return;
+    }
+
+    if (restrictFormats && !ALLOWED_TYPES.includes(file.type)) {
+      showToast(`Only ${ALLOWED_FORMATS_LABEL} images are allowed.`, 'error');
+      e.target.value = '';
+      return;
+    }
 
     setUploading(true);
     try {
@@ -37,13 +56,19 @@ export default function ImageUpload({ value, onChange, label, bucket = 'images' 
     }
   };
 
+  const containerStyle = aspectRatio ? { aspectRatio } : undefined;
+  const containerClass = aspectRatio ? '' : 'aspect-video';
+
   return (
     <div className="space-y-2">
       <label className="text-xs font-bold text-taupe uppercase tracking-widest">{label}</label>
       
       <div className="relative group">
         {value ? (
-          <div className="relative rounded-2xl overflow-hidden aspect-video bg-soft-cream/30 border-2 border-dashed border-primary/10">
+          <div
+            className={`relative rounded-2xl overflow-hidden ${containerClass} bg-soft-cream/30 border-2 border-dashed border-primary/10`}
+            style={containerStyle}
+          >
             <img 
               src={value} 
               alt="Preview" 
@@ -74,7 +99,8 @@ export default function ImageUpload({ value, onChange, label, bucket = 'images' 
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="w-full aspect-video rounded-2xl border-2 border-dashed border-primary/20 bg-soft-cream/30 hover:bg-soft-cream/50 transition-colors flex flex-col items-center justify-center space-y-2 text-taupe group"
+            className={`w-full ${containerClass} rounded-2xl border-2 border-dashed border-primary/20 bg-soft-cream/30 hover:bg-soft-cream/50 transition-colors flex flex-col items-center justify-center space-y-2 text-taupe group`}
+            style={containerStyle}
           >
             {uploading ? (
               <Loader2 className="animate-spin text-primary" size={32} />
@@ -93,10 +119,14 @@ export default function ImageUpload({ value, onChange, label, bucket = 'images' 
           type="file"
           ref={fileInputRef}
           onChange={handleFileChange}
-          accept="image/*"
+          accept={restrictFormats ? ALLOWED_TYPES.join(',') : 'image/*'}
           className="hidden"
         />
       </div>
+
+      {hint && (
+        <p className="text-[11px] text-taupe/60 font-medium">{hint}</p>
+      )}
 
       <div className="flex items-center space-x-2">
         <div className="flex-grow h-px bg-primary/5"></div>
