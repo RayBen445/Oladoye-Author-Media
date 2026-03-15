@@ -190,11 +190,11 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
                 value={formData.title}
                 onChange={(e) => {
                   const newTitle = e.target.value;
-                  if (!slugManuallyEdited) {
-                    setFormData({ ...formData, title: newTitle, slug: generateSlug(newTitle) });
-                  } else {
-                    setFormData({ ...formData, title: newTitle });
-                  }
+                  setFormData({
+                    ...formData,
+                    title: newTitle,
+                    ...(!slugManuallyEdited && { slug: generateSlug(newTitle) }),
+                  });
                 }}
                 className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
               />
