@@ -10,7 +10,7 @@ export default function Blog() {
   const regularPosts = posts.slice(1);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       <div className="text-center mb-16">
         <h1 className="text-4xl md:text-6xl font-serif font-bold text-deep-brown mb-4">The Inkwell</h1>
         <p className="text-xl text-taupe max-w-2xl mx-auto">
@@ -110,6 +110,6 @@ export default function Blog() {
           )}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

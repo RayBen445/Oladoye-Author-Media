@@ -103,12 +103,25 @@ function ContentField({ label, value, onChange, required, rows = 8, placeholder,
   );
 }
 
+
+function generateSlug(text: string): string {
+  return text
+    .normalize('NFD')
+    .toLowerCase()
+    .trim()
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
 // --------------------------------------------------------------------------
 // Main form
 // --------------------------------------------------------------------------
 export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!post?.id);
   const [formData, setFormData] = useState<Partial<BlogPost>>(
     post || {
       title: '',
@@ -175,7 +188,14 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
                 type="text"
                 required
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) => {
+                  const newTitle = e.target.value;
+                  setFormData({
+                    ...formData,
+                    title: newTitle,
+                    ...(!slugManuallyEdited && { slug: generateSlug(newTitle) }),
+                  });
+                }}
                 className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
@@ -185,7 +205,10 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
                 type="text"
                 required
                 value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                onChange={(e) => {
+                  setSlugManuallyEdited(true);
+                  setFormData({ ...formData, slug: e.target.value });
+                }}
                 className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
               />
             </div>

@@ -4,6 +4,9 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, ShoppingCart, Star, Calendar, BookOpen, Share2, Loader2 } from "lucide-react";
 import { supabase, type Book } from "../lib/supabase";
 import { useToast } from "../components/Toast";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 
 export default function BookDetail() {
   const { slug } = useParams();
@@ -221,8 +224,8 @@ export default function BookDetail() {
             <p className="text-xl font-medium text-deep-brown mb-4 leading-relaxed italic">
               {book.description}
             </p>
-            <div className="leading-relaxed whitespace-pre-wrap">
-              {book.long_description}
+                        <div className="leading-relaxed whitespace-pre-wrap prose prose-taupe max-w-none">
+              <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>{book.long_description || ''}</ReactMarkdown>
             </div>
           </div>
 
