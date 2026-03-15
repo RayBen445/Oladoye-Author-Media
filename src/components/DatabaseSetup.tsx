@@ -44,7 +44,7 @@ CREATE TABLE public.blog_posts (
 -- Create Site Settings table
 CREATE TABLE public.site_settings (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    site_name TEXT DEFAULT 'Lumina',
+    site_name TEXT DEFAULT 'My Blog',
     site_logo_url TEXT,
     favicon_url TEXT,
     author_name TEXT,
@@ -106,7 +106,7 @@ INSERT INTO public.site_settings (
     about_content, 
     footer_text
 ) VALUES (
-    'Lumina',
+    'My Blog',
     'Your Name', 
     'Author & Storyteller', 
     'A brief bio about you.', 

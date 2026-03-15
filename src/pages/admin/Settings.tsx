@@ -31,7 +31,7 @@ export default function AdminSettings() {
   useEffect(() => {
     if (settings) {
       setFormData({
-        site_name: settings.site_name || "Lumina",
+        site_name: settings.site_name || "My Blog",
         tagline: settings.tagline || "",
         footer_text: settings.footer_text || "",
         site_logo_url: settings.site_logo_url || "",
@@ -126,7 +126,7 @@ export default function AdminSettings() {
                       value={formData.site_name}
                       onChange={(e) => setFormData({ ...formData, site_name: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="e.g. Lumina"
+                      placeholder="e.g. My Blog"
                     />
                   </div>
                   <div className="space-y-2">
@@ -146,7 +146,7 @@ export default function AdminSettings() {
                       value={formData.footer_text}
                       onChange={(e) => setFormData({ ...formData, footer_text: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="e.g. © 2026 Lumina. All rights reserved."
+                      placeholder="e.g. © 2026 My Blog. All rights reserved."
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">

@@ -10,7 +10,7 @@ interface AdminNavbarProps {
 export default function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
   const navigate = useNavigate();
   const { settings } = useSiteSettings();
-  const siteName = settings?.site_name || "Lumina";
+  const siteName = settings?.site_name || "My Blog";
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();

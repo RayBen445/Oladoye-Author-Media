@@ -5,7 +5,7 @@ import { useSiteSettings } from "../hooks/useSiteSettings";
 
 export default function Navbar() {
   const { settings } = useSiteSettings();
-  const siteName = settings?.site_name || "Lumina";
+  const siteName = settings?.site_name || "My Blog";
   const siteLogo = settings?.site_logo_url;
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();

@@ -31,7 +31,7 @@ export default function Books() {
       <div className="text-center mb-16">
         <h1 className="text-4xl md:text-6xl font-serif font-bold text-deep-brown mb-4">The Library</h1>
         <p className="text-xl text-taupe max-w-2xl mx-auto">
-          Explore the complete collection of works by Lumina. From published novels to limited editions.
+          Explore the complete collection of works by the author. From published novels to limited editions.
         </p>
       </div>
 

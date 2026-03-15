@@ -129,7 +129,7 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
       content: '',
       excerpt: '',
       featured_image_url: '',
-      author_name: 'Lumina',
+      author_name: '',
       published: true,
       published_at: new Date().toISOString(),
     }
