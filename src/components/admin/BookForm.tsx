@@ -9,9 +9,21 @@ type BookFormProps = {
   onSuccess: () => void;
 };
 
+function generateSlug(text: string): string {
+  return text
+    .normalize('NFD')
+    .toLowerCase()
+    .trim()
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+}
+
 export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!book?.id);
   const [formData, setFormData] = useState<Partial<Book>>(
     book || {
       title: '',
@@ -81,7 +93,14 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
                 type="text" 
                 required
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) => {
+                  const newTitle = e.target.value;
+                  if (!slugManuallyEdited) {
+                    setFormData({ ...formData, title: newTitle, slug: generateSlug(newTitle) });
+                  } else {
+                    setFormData({ ...formData, title: newTitle });
+                  }
+                }}
                 className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
@@ -91,7 +110,19 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
                 type="text" 
                 required
                 value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                onChange={(e) => {
+                  setSlugManuallyEdited(true);
+                  setFormData({ ...formData, slug: e.target.value });
+                }}
+                className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-taupe uppercase tracking-widest">Author Name</label>
+              <input 
+                type="text" 
+                value={formData.author_name}
+                onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
@@ -140,6 +171,10 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
               label="Cover Image"
               value={formData.cover_image_url || ''}
               onChange={(url) => setFormData({ ...formData, cover_image_url: url })}
+              maxSizeMB={2}
+              restrictFormats
+              hint="Recommended size: 1600 × 2400 px (Book cover ratio 2:3)"
+              aspectRatio="2/3"
             />
             <div className="space-y-2">
               <label className="text-xs font-bold text-taupe uppercase tracking-widest">Gumroad Link</label>
