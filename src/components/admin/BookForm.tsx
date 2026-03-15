@@ -27,7 +27,7 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
   const [formData, setFormData] = useState<Partial<Book>>(
     book || {
       title: '',
-      author_name: 'Lumina',
+      author_name: '',
       slug: '',
       description: '',
       long_description: '',

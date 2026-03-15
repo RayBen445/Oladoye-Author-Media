@@ -3,10 +3,12 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, User, Share2, MessageCircle, Clock, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { usePost } from "../hooks/useBlogPosts";
+import { useSiteSettings } from "../hooks/useSiteSettings";
 
 export default function BlogPostDetail() {
   const { slug } = useParams();
   const { post, loading } = usePost(slug || "");
+  const { settings } = useSiteSettings();
 
   if (loading) {
     return (
@@ -120,16 +122,16 @@ export default function BlogPostDetail() {
           <div className="bg-secondary/20 p-8 rounded-3xl flex flex-col md:flex-row items-center gap-8">
             <div className="w-24 h-24 rounded-full overflow-hidden shadow-lg shrink-0">
               <img 
-                src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=2070" 
+                src={settings?.author_profile_image_url || "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=2070"}
                 alt="Author" 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
               />
             </div>
             <div className="space-y-3 text-center md:text-left">
-              <h3 className="text-xl font-serif font-bold text-deep-brown">About {post.author_name}</h3>
+              <h3 className="text-xl font-serif font-bold text-deep-brown">About {settings?.author_name || post.author_name}</h3>
               <p className="text-deep-brown/70 leading-relaxed">
-                Lumina is a storyteller who believes in the power of words to transform and heal. She writes from her home in the mountains, surrounded by books and the quiet whispers of the wind.
+                {settings?.author_bio || "Author bio goes here."}
               </p>
               <Link to="/admin/settings" className="text-primary font-bold hover:underline">View Profile</Link>
             </div>
