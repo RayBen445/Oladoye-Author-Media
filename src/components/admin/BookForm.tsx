@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSiteSettings } from '../../hooks/useSiteSettings';
 import { X, Save, Loader2, AlertCircle } from 'lucide-react';
 import { supabase, type Book } from '../../lib/supabase';
 import ImageUpload from './ImageUpload';
@@ -21,6 +22,16 @@ function generateSlug(text: string): string {
 }
 
 export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
+
+  const { settings } = useSiteSettings();
+
+  useEffect(() => {
+    // Pre-fill author for new books once settings are loaded
+    if (!book && settings?.author_name) {
+      setFormData(prev => ({ ...prev, author_name: settings.author_name }));
+    }
+  }, [book, settings]);
+
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!book?.id);
@@ -35,6 +46,7 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
       release_date: new Date().toISOString().split('T')[0],
       genre: 'Fantasy',
       gumroad_link: '',
+      selar_link: '',
       featured: false,
       order: 0,
     }
@@ -182,6 +194,15 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
                 type="url" 
                 value={formData.gumroad_link}
                 onChange={(e) => setFormData({ ...formData, gumroad_link: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-taupe uppercase tracking-widest">Selar Link</label>
+              <input
+                type="url"
+                value={formData.selar_link || ''}
+                onChange={(e) => setFormData({ ...formData, selar_link: e.target.value })}
                 className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
               />
             </div>

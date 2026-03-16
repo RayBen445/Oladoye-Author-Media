@@ -133,6 +133,74 @@ export default function Home() {
         )}
       </section>
 
+
+      {/* Featured Blog Posts */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="flex justify-between items-end mb-12">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-serif font-bold text-deep-brown mb-2">From the Blog</h2>
+            <p className="text-taupe font-medium">Latest thoughts and reflections</p>
+          </div>
+          <Link to="/blog" className="text-primary font-bold flex items-center space-x-1 hover:underline">
+            <span>View All</span>
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+
+        {postsLoading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="animate-spin text-primary" size={40} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {latestPosts.slice(0, 3).map((post, i) => (
+              <motion.div
+                key={post.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -10 }}
+                className="bg-white rounded-2xl overflow-hidden shadow-sm border border-primary/5 group"
+              >
+                <Link to={`/blog/${post.slug}`}>
+                  <div className="aspect-video overflow-hidden relative">
+                    <img
+                      src={post.featured_image_url || `https://picsum.photos/seed/${post.id}/800/450`}
+                      alt={post.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                  <div className="p-6">
+                    <div className="flex items-center space-x-2 text-xs font-bold text-taupe uppercase tracking-widest mb-2">
+                      <span>{post.genre || "Uncategorized"}</span>
+                      <span className="w-1 h-1 bg-taupe rounded-full" />
+                      <span>{new Date(post.published_at).toLocaleDateString()}</span>
+                    </div>
+                    <h3 className="text-xl font-serif font-bold text-deep-brown mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <p className="text-deep-brown/60 text-sm line-clamp-2 mb-4">
+                      {post.excerpt}
+                    </p>
+                    <div className="text-primary font-bold text-sm flex items-center space-x-1">
+                      <span>Read More</span>
+                      <ArrowRight size={14} />
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+            {latestPosts.length === 0 && (
+              <div className="col-span-3 text-center py-20 bg-white rounded-3xl border border-dashed border-primary/20">
+                <p className="text-taupe font-medium italic">No blog posts yet. Check back soon!</p>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
+
       {/* Author Bio Snippet */}
       <section className="bg-secondary/30 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

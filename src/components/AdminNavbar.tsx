@@ -2,6 +2,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { Menu, ExternalLink, LogOut, LayoutDashboard } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useSiteSettings } from "../hooks/useSiteSettings";
+import { DEFAULT_SITE_NAME } from "../lib/constants";
+
+
 
 interface AdminNavbarProps {
   onMenuClick: () => void;
@@ -10,7 +13,7 @@ interface AdminNavbarProps {
 export default function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
   const navigate = useNavigate();
   const { settings } = useSiteSettings();
-  const siteName = settings?.site_name || "My Blog";
+  const siteName = settings?.site_name || DEFAULT_SITE_NAME;
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();

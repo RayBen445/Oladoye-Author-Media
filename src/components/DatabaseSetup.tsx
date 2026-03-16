@@ -1,3 +1,4 @@
+import { DEFAULT_SITE_NAME } from '../lib/constants';
 import { Database, Terminal, CheckCircle2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useState } from 'react';
@@ -18,8 +19,11 @@ CREATE TABLE public.books (
     release_date DATE,
     genre TEXT,
     gumroad_link TEXT,
+    selar_link TEXT,
     advanced_gumroad_link TEXT,
+    selar_link TEXT,
     premium_gumroad_link TEXT,
+    selar_link TEXT,
     featured BOOLEAN DEFAULT false,
     "order" INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT now()
@@ -34,6 +38,7 @@ CREATE TABLE public.blog_posts (
     advanced_content TEXT,
     premium_content TEXT,
     excerpt TEXT,
+    genre TEXT,
     featured_image_url TEXT,
     author_name TEXT NOT NULL,
     published BOOLEAN DEFAULT false,
@@ -44,7 +49,7 @@ CREATE TABLE public.blog_posts (
 -- Create Site Settings table
 CREATE TABLE public.site_settings (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    site_name TEXT DEFAULT 'My Blog',
+    site_name TEXT DEFAULT '${DEFAULT_SITE_NAME}',
     site_logo_url TEXT,
     favicon_url TEXT,
     author_name TEXT,
@@ -106,7 +111,7 @@ INSERT INTO public.site_settings (
     about_content, 
     footer_text
 ) VALUES (
-    'My Blog',
+    '${DEFAULT_SITE_NAME}',
     'Your Name', 
     'Author & Storyteller', 
     'A brief bio about you.', 

@@ -50,11 +50,11 @@ export default function BlogPostDetail() {
       >
         <div className="space-y-6 text-center">
           <div className="flex items-center justify-center space-x-4 text-taupe text-sm font-bold uppercase tracking-widest">
-            <span className="text-accent">Writing Life</span>
+            <span className="text-accent">{post.genre || "Uncategorized"}</span>
             <span className="w-1 h-1 bg-taupe rounded-full" />
             <div className="flex items-center space-x-1">
               <Clock size={14} />
-              <span>8 min read</span>
+              <span>{Math.ceil(post.content?.split(" ").length / 200) || 5} min read</span>
             </div>
           </div>
           <h1 className="text-4xl md:text-6xl font-serif font-bold text-deep-brown leading-tight">
@@ -129,7 +129,7 @@ export default function BlogPostDetail() {
               />
             </div>
             <div className="space-y-3 text-center md:text-left">
-              <h3 className="text-xl font-serif font-bold text-deep-brown">About {settings?.author_name || post.author_name}</h3>
+              <h3 className="text-xl font-serif font-bold text-deep-brown">About {settings?.author_name || post?.author_name}</h3>
               <p className="text-deep-brown/70 leading-relaxed">
                 {settings?.author_bio || "Author bio goes here."}
               </p>

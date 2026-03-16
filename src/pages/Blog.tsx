@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react";
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { Calendar, User, ArrowRight, Loader2 } from "lucide-react";
@@ -5,9 +6,24 @@ import { useBlogPosts } from "../hooks/useBlogPosts";
 
 export default function Blog() {
   const { posts, loading } = useBlogPosts();
+  const [selectedGenre, setSelectedGenre] = useState("All");
 
-  const featuredPost = posts[0];
-  const regularPosts = posts.slice(1);
+  const genres = useMemo(() => {
+    const g = ["All"];
+    posts.forEach(p => {
+      if (p.genre && !g.includes(p.genre)) g.push(p.genre);
+    });
+    return g;
+  }, [posts]);
+
+  const filteredPosts = useMemo(() => {
+    return posts.filter(post => {
+      return selectedGenre === "All" || post.genre === selectedGenre;
+    });
+  }, [posts, selectedGenre]);
+
+  const featuredPost = filteredPosts[0];
+  const regularPosts = filteredPosts.slice(1);
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -18,7 +34,28 @@ export default function Blog() {
         </p>
       </div>
 
+
+      {/* Filters */}
+      <div className="flex flex-col md:flex-row gap-6 mb-12 items-center justify-center">
+        <div className="flex items-center space-x-4 overflow-x-auto pb-2 w-full md:w-auto">
+          {genres.map((genre) => (
+            <button
+              key={genre}
+              onClick={() => setSelectedGenre(genre)}
+              className={`px-6 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${
+                selectedGenre === genre
+                ? "bg-primary text-soft-cream shadow-md"
+                : "bg-white text-taupe hover:bg-primary/5 border border-primary/5"
+              }`}
+            >
+              {genre}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {loading ? (
+
         <div className="flex justify-center py-20">
           <Loader2 className="animate-spin text-primary" size={40} />
         </div>
@@ -86,9 +123,9 @@ export default function Blog() {
                   />
                 </div>
                 <div className="flex items-center space-x-4 text-taupe text-xs font-bold uppercase tracking-widest mb-3">
-                  <span>Writing Tips</span>
+                  <span>{post.genre || "Uncategorized"}</span>
                   <span className="w-1 h-1 bg-taupe rounded-full" />
-                  <span>5 min read</span>
+                  <span>{Math.ceil(post.content?.split(" ").length / 200) || 5} min read</span>
                 </div>
                 <h3 className="text-2xl font-serif font-bold text-deep-brown mb-3 group-hover:text-primary transition-colors">
                   {post.title}

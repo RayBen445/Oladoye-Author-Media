@@ -40,6 +40,7 @@ export type Book = {
   release_date: string;
   genre: string;
   gumroad_link: string;
+  selar_link?: string;
   featured: boolean;
   order: number;
   created_at: string;
@@ -51,6 +52,7 @@ export type BlogPost = {
   slug: string;
   content: string;
   excerpt: string;
+  genre?: string;
   featured_image_url: string;
   author_name: string;
   published: boolean;

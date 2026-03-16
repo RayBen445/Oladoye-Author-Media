@@ -3,6 +3,7 @@ import AdminLayout from "../../components/AdminLayout";
 import { Save, User, Mail, Globe, Twitter, Instagram, Facebook, Linkedin, Loader2, CheckCircle, Quote, AlertCircle } from "lucide-react";
 import { useSiteSettings } from "../../hooks/useSiteSettings";
 import ImageUpload from "../../components/admin/ImageUpload";
+import { DEFAULT_SITE_NAME } from '../../lib/constants';
 
 export default function AdminSettings() {
   const { settings, loading, updateSettings } = useSiteSettings();
@@ -126,7 +127,7 @@ export default function AdminSettings() {
                       value={formData.site_name}
                       onChange={(e) => setFormData({ ...formData, site_name: e.target.value })}
                       className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="e.g. My Blog"
+                      placeholder={`e.g. ${DEFAULT_SITE_NAME}`}
                     />
                   </div>
                   <div className="space-y-2">

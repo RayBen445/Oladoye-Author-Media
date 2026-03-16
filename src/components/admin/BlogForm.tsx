@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { X, Save, Loader2, ImagePlus, AlertCircle } from 'lucide-react';
 import { supabase, type BlogPost } from '../../lib/supabase';
+import { useSiteSettings } from '../../hooks/useSiteSettings';
 import ImageUpload from './ImageUpload';
 
 type BlogFormProps = {
@@ -119,6 +120,16 @@ function generateSlug(text: string): string {
 // Main form
 // --------------------------------------------------------------------------
 export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
+
+  const { settings } = useSiteSettings();
+
+  useEffect(() => {
+    // Pre-fill author for new posts once settings are loaded
+    if (!post && settings?.author_name) {
+      setFormData(prev => ({ ...prev, author_name: settings.author_name }));
+    }
+  }, [post, settings]);
+
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!post?.id);
@@ -128,6 +139,7 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
       slug: '',
       content: '',
       excerpt: '',
+      genre: 'Writing Life',
       featured_image_url: '',
       author_name: '',
       published: true,
@@ -214,6 +226,18 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
             </div>
           </div>
 
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-taupe uppercase tracking-widest">Genre / Category</label>
+            <input
+              type="text"
+              value={formData.genre || ''}
+              onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+              className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
+              placeholder="e.g. Writing Life, Writing Tips, News"
+            />
+          </div>
+
           <div className="space-y-2">
             <label className="text-xs font-bold text-taupe uppercase tracking-widest">Excerpt</label>
             <textarea
@@ -233,21 +257,13 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
             mono
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
             <ImageUpload
               label="Featured Image"
               value={formData.featured_image_url || ''}
               onChange={(url) => setFormData({ ...formData, featured_image_url: url })}
             />
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-taupe uppercase tracking-widest">Published At</label>
-              <input
-                type="datetime-local"
-                value={formData.published_at?.slice(0, 16)}
-                onChange={(e) => setFormData({ ...formData, published_at: new Date(e.target.value).toISOString() })}
-                className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
+
           </div>
 
           <div className="flex items-center space-x-6">
