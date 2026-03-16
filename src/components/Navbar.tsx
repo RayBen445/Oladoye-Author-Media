@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Book, PenTool, Home, User, Menu, X } from "lucide-react";
 import { useSiteSettings } from "../hooks/useSiteSettings";
+import { DEFAULT_SITE_NAME } from '../lib/constants';
 
 export default function Navbar() {
   const { settings } = useSiteSettings();
-  const siteName = settings?.site_name || "My Blog";
+  const siteName = settings?.site_name || DEFAULT_SITE_NAME;
   const siteLogo = settings?.site_logo_url;
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();

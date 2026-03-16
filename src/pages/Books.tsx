@@ -3,9 +3,12 @@ import { motion } from "motion/react";
 import { Search, Filter, BookOpen, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useBooks } from "../hooks/useBooks";
+import { useSiteSettings } from "../hooks/useSiteSettings";
 
 export default function Books() {
   const { books, loading } = useBooks();
+  const { settings } = useSiteSettings();
+  const authorName = settings?.author_name || 'the author';
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("All");
 
@@ -31,7 +34,7 @@ export default function Books() {
       <div className="text-center mb-16">
         <h1 className="text-4xl md:text-6xl font-serif font-bold text-deep-brown mb-4">The Library</h1>
         <p className="text-xl text-taupe max-w-2xl mx-auto">
-          Explore the complete collection of works by the author. From published novels to limited editions.
+          Explore the complete collection of works by {authorName}. From published novels to limited editions.
         </p>
       </div>
 
