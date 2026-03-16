@@ -20,7 +20,6 @@ export default function Navbar() {
     { to: "/", label: "Home", icon: <Home size={18} /> },
     { to: "/books", label: "Books", icon: <Book size={18} /> },
     { to: "/blog", label: "Blog", icon: <PenTool size={18} /> },
-    { to: "/admin", label: "Admin", icon: <User size={18} /> },
   ];
 
   return (
