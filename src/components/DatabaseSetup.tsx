@@ -21,11 +21,10 @@ CREATE TABLE public.books (
     gumroad_link TEXT,
     selar_link TEXT,
     advanced_gumroad_link TEXT,
-    selar_link TEXT,
     premium_gumroad_link TEXT,
-    selar_link TEXT,
     featured BOOLEAN DEFAULT false,
     "order" INTEGER DEFAULT 0,
+    is_draft BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -43,6 +42,7 @@ CREATE TABLE public.blog_posts (
     author_name TEXT NOT NULL,
     published BOOLEAN DEFAULT false,
     published_at TIMESTAMPTZ,
+    is_draft BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
