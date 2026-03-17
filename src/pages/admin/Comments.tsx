@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
-import { Loader2, Trash2, MessageCircle, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, Trash2, MessageCircle, CheckCircle, XCircle, Heart, Reply, Send, ThumbsUp, MessageSquare } from "lucide-react";
 import { useToast } from "../../components/Toast";
 
 type Comment = {
@@ -10,6 +10,8 @@ type Comment = {
   content: string;
   created_at: string;
   approved: boolean;
+  likes?: number;
+  parent_id?: string;
   blog_posts: {
     title: string;
   };
@@ -21,6 +23,9 @@ export default function AdminComments() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [submittingReply, setSubmittingReply] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [processingBulk, setProcessingBulk] = useState(false);
   const { showToast } = useToast();
@@ -41,7 +46,9 @@ export default function AdminComments() {
           content,
           approved,
           created_at,
-          blog_posts ( title )
+          blog_posts ( title ),
+          likes,
+          parent_id
         `)
         .order("created_at", { ascending: false });
 
@@ -135,7 +142,47 @@ export default function AdminComments() {
     }
   }
 
-  if (loading) {
+
+  const handleAdminLike = async (id: string, currentLikes: number) => {
+    try {
+      const newLikes = (currentLikes || 0) + 1;
+      const { error } = await supabase.from('comments').update({ likes: newLikes }).eq('id', id);
+      if (error) throw error;
+      setComments(current => current.map(c => c.id === id ? { ...c, likes: newLikes } : c));
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  const handleAdminReply = async (postId: string, parentId: string) => {
+    if (!replyContent.trim()) return;
+    setSubmittingReply(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      // Assume the admin is replying as the site author, or just "Admin"
+      const authorName = "Admin";
+
+      const { error } = await supabase.from('comments').insert([{
+        post_id: postId,
+        parent_id: parentId,
+        author_name: authorName,
+        content: replyContent.trim(),
+        approved: true // Admin replies are auto-approved
+      }]);
+
+      if (error) throw error;
+
+      showToast('Reply posted successfully', 'success');
+      setReplyingTo(null);
+      setReplyContent('');
+      fetchComments();
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    } finally {
+      setSubmittingReply(false);
+    }
+  };
+if (loading) {
     return (
     <AdminLayout>
       <div className="flex justify-center items-center h-64">
@@ -226,9 +273,47 @@ export default function AdminComments() {
                         </span>
                       )}
                     </div>
+
+                  <div className="flex flex-col gap-4">
                     <p className="text-deep-brown/80 leading-relaxed whitespace-pre-wrap">
                       {comment.content}
                     </p>
+                    <div className="flex items-center gap-4 text-sm font-bold text-taupe mt-2">
+                      <button
+                        onClick={() => handleAdminLike(comment.id, comment.likes)}
+                        className="flex items-center gap-1.5 hover:text-primary transition-colors"
+                      >
+                        <ThumbsUp size={16} className={comment.likes > 0 ? "fill-primary text-primary" : ""} />
+                        <span>{comment.likes || 0}</span>
+                      </button>
+                      <button
+                        onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                        className="flex items-center gap-1.5 hover:text-primary transition-colors"
+                      >
+                        <MessageSquare size={16} />
+                        <span>Reply</span>
+                      </button>
+                    </div>
+                    {replyingTo === comment.id && (
+                      <div className="mt-4 flex gap-2 w-full max-w-2xl bg-white p-2 rounded-xl border border-primary/20 shadow-sm">
+                        <textarea
+                          value={replyContent}
+                          onChange={(e) => setReplyContent(e.target.value)}
+                          placeholder="Write an admin reply..."
+                          className="flex-grow bg-transparent border-none focus:ring-0 resize-none h-10 p-2 text-sm text-deep-brown placeholder:text-taupe/50"
+                          disabled={submittingReply}
+                        />
+                        <button
+                          onClick={() => handleAdminReply(comment.post_id, comment.id)}
+                          disabled={!replyContent.trim() || submittingReply}
+                          className="p-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 shrink-0 self-end"
+                        >
+                          {submittingReply ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   </div>
                 </div>
 

@@ -13,6 +13,18 @@ import { useToast } from "../components/Toast";
 import Comments from "../components/Comments";
 
 
+
+const getFontClass = (font: string | undefined) => {
+  switch (font) {
+    case 'serif': return 'font-serif';
+    case 'mono': return 'font-mono';
+    case 'lora': return '[font-family:"Lora",serif]';
+    case 'times': return '[font-family:"Times_New_Roman",Times,serif]';
+    case 'sans':
+    default: return 'font-sans';
+  }
+};
+
 export default function BlogPostDetail() {
   const { slug } = useParams();
   const { post, loading } = usePost(slug || "");

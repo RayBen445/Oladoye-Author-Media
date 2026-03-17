@@ -7,6 +7,7 @@ import Books from "./pages/Books";
 import BookDetail from "./pages/BookDetail";
 import Blog from "./pages/Blog";
 import BlogPostDetail from "./pages/BlogPostDetail";
+import Podcasts from "./pages/Podcasts";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminBooks from "./pages/admin/Books";
 import AdminBlog from "./pages/admin/Blog";

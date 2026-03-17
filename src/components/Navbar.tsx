@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Book, PenTool, Home, User, Menu, X } from "lucide-react";
+import { Book, PenTool, Home, User, Menu, X, Headphones } from "lucide-react";
 import { useSiteSettings } from "../hooks/useSiteSettings";
 import { DEFAULT_SITE_NAME } from '../lib/constants';
 
@@ -20,6 +20,7 @@ export default function Navbar() {
     { to: "/", label: "Home", icon: <Home size={18} /> },
     { to: "/books", label: "Books", icon: <Book size={18} /> },
     { to: "/blog", label: "Blog", icon: <PenTool size={18} /> },
+    { to: "/podcasts", label: "Podcasts", icon: <Headphones size={18} /> },
   ];
 
   return (

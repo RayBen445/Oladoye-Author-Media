@@ -1,0 +1,129 @@
+import { useState, useEffect } from "react";
+import { motion } from "motion/react";
+import { Headphones, Loader2, PlayCircle, Clock, Calendar } from "lucide-react";
+import { supabase } from "../lib/supabase";
+
+type Podcast = {
+  id: string;
+  title: string;
+  description: string;
+  audio_url: string;
+  cover_image_url: string;
+  duration: string;
+  published_at: string;
+};
+
+export default function Podcasts() {
+  const [podcasts, setPodcasts] = useState<Podcast[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPodcasts();
+  }, []);
+
+  async function fetchPodcasts() {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('podcasts')
+        .select('*')
+        .order('published_at', { ascending: false });
+
+      if (error) {
+        if (error.code === '42P01') {
+          // Table doesn't exist yet, just ignore gracefully
+          setPodcasts([]);
+          return;
+        }
+        throw error;
+      }
+      setPodcasts(data as Podcast[]);
+    } catch (err) {
+      console.error("Error fetching podcasts:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-[50vh] flex justify-center items-center">
+        <Loader2 className="animate-spin text-primary" size={40} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+        <div className="text-center mb-16">
+          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Headphones className="text-primary" size={32} />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-deep-brown mb-4">The Podcast</h1>
+          <p className="text-xl text-taupe max-w-2xl mx-auto">
+            Listen to conversations about writing, life, and the stories that shape us.
+          </p>
+        </div>
+
+        {podcasts.length === 0 ? (
+          <div className="text-center py-20 bg-soft-cream/30 rounded-3xl border border-primary/10">
+            <Headphones className="mx-auto h-16 w-16 text-taupe/30 mb-4" />
+            <h3 className="text-2xl font-serif font-bold text-deep-brown mb-2">Coming Soon</h3>
+            <p className="text-taupe">We are working on bringing you the best episodes.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {podcasts.map((podcast, index) => (
+              <motion.div
+                key={podcast.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="bg-white rounded-3xl overflow-hidden shadow-xl shadow-primary/5 border border-primary/10 group hover:-translate-y-2 transition-transform duration-300"
+              >
+                <div className="aspect-[4/3] relative overflow-hidden bg-soft-cream">
+                  {podcast.cover_image_url ? (
+                    <img
+                      src={podcast.cover_image_url}
+                      alt={podcast.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex justify-center items-center bg-primary/5">
+                       <Headphones size={48} className="text-primary/30" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                    <div className="w-16 h-16 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity transform scale-75 group-hover:scale-100 shadow-xl shadow-black/20">
+                      <PlayCircle className="text-primary" size={32} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-8">
+                  <div className="flex items-center space-x-4 text-taupe text-xs font-bold uppercase tracking-widest mb-3">
+                    <div className="flex items-center space-x-1"><Calendar size={14} /> <span>{new Date(podcast.published_at).toLocaleDateString()}</span></div>
+                    {podcast.duration && <div className="flex items-center space-x-1"><Clock size={14} /> <span>{podcast.duration}</span></div>}
+                  </div>
+
+                  <h3 className="text-xl font-serif font-bold text-deep-brown mb-3 group-hover:text-primary transition-colors">
+                    {podcast.title}
+                  </h3>
+
+                  <p className="text-deep-brown/70 line-clamp-2 mb-6 text-sm">
+                    {podcast.description}
+                  </p>
+
+                  <audio controls className="w-full h-10 rounded-full" src={podcast.audio_url} preload="metadata">
+                    Your browser does not support the audio element.
+                  </audio>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+}
