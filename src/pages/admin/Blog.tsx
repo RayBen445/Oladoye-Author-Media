@@ -8,7 +8,7 @@ import { useToast } from "../../components/Toast";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
 export default function AdminBlog() {
-  const { posts, loading, refetch } = useBlogPosts();
+  const { posts, loading, refetch } = useBlogPosts({ includeDrafts: true });
   const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [showForm, setShowForm] = useState(false);

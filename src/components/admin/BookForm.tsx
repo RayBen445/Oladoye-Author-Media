@@ -100,7 +100,11 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
           }
         }
       } catch (err) {
+        if (err.message && err.message.includes('books_slug_key')) {
+        setFormError('The generated slug is already in use. Please modify the slug to be unique.');
+      } else {
         console.error('Auto-save failed:', err);
+      }
       } finally {
         setIsAutoSaving(false);
       }
@@ -130,7 +134,11 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
       onSuccess();
       onClose();
     } catch (err: any) {
+      if (err.message && err.message.includes('books_slug_key')) {
+      setFormError('The generated slug is already in use. Please modify the slug to be unique.');
+    } else {
       setFormError(err.message);
+    }
     } finally {
       setLoading(false);
     }

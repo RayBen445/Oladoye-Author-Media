@@ -2,6 +2,8 @@ import { motion } from "motion/react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, User, Share2, MessageCircle, Clock, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 import { usePost } from "../hooks/useBlogPosts";
 import { useSiteSettings } from "../hooks/useSiteSettings";
 import { useToast } from "../components/Toast";
@@ -122,7 +124,7 @@ export default function BlogPostDetail() {
         </div>
 
         <div className="markdown-body prose prose-lg prose-primary max-w-none text-deep-brown/80 leading-relaxed">
-          <ReactMarkdown
+          <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}
             components={{
               img({ src, alt }) {
                 return (
