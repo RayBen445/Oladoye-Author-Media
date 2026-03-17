@@ -124,6 +124,19 @@ vercel --prod
 
 ---
 
+---
+
+## 🔮 Suggested Features / Future Roadmap
+
+- **Rich Text Editor (WYSIWYG):** Upgrade the blog and book description textareas to a full rich-text editor (e.g., TipTap or Quill) for easier content formatting.
+- **Pagination & Infinite Scroll:** Implement pagination for the blog and book catalog to handle large amounts of content gracefully and improve load times.
+- **Analytics Integration:** Add a dashboard widget to track page views, book clicks, and newsletter signup conversion rates.
+- **Enhanced Media Library:** A dedicated media manager in the admin dashboard to reuse uploaded images across multiple blog posts or books.
+- **Comment Moderation Tools:** Improved UI for bulk-approving or rejecting user comments and book reviews.
+- **Automated Social Sharing:** Integration to automatically post new blog articles or "Coming Soon" book announcements to social media platforms.
+
+---
+
 ## 📄 License
 
 This project is private. All rights reserved © Oladoye Author Media.
