@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, type BlogPost } from '../lib/supabase';
 
-export function useBlogPosts() {
+export function useBlogPosts(options?: { includeDrafts?: boolean }) {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -9,11 +9,11 @@ export function useBlogPosts() {
   const fetchPosts = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .eq('published', true)
-        .order('published_at', { ascending: false });
+      let query = supabase.from('blog_posts').select('*').order('published_at', { ascending: false });
+      if (!options?.includeDrafts) {
+        query = query.eq('published', true);
+      }
+      const { data, error } = await query;
 
       if (error) throw error;
       setPosts(data || []);

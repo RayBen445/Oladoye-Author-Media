@@ -197,7 +197,11 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
           }
         }
       } catch (err) {
+        if (err.message && err.message.includes('blog_posts_slug_key')) {
+        setFormError('The generated slug is already in use. Please modify the slug to be unique.');
+      } else {
         console.error('Auto-save failed:', err);
+      }
       } finally {
         setIsAutoSaving(false);
       }
@@ -227,7 +231,11 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
       onSuccess();
       onClose();
     } catch (err: any) {
+      if (err.message && err.message.includes('blog_posts_slug_key')) {
+      setFormError('The generated slug is already in use. Please modify the slug to be unique.');
+    } else {
       setFormError(err.message);
+    }
     } finally {
       setLoading(false);
     }
