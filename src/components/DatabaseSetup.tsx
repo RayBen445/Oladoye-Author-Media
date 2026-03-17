@@ -6,7 +6,7 @@ import { useState } from 'react';
 export default function DatabaseSetup() {
   const [copied, setCopied] = useState(false);
   const sql = `-- Create Books table
-CREATE TABLE public.books (
+CREATE TABLE IF NOT EXISTS public.books (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     title TEXT NOT NULL,
     author_name TEXT NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE public.books (
 );
 
 -- Create Blog Posts table
-CREATE TABLE public.blog_posts (
+CREATE TABLE IF NOT EXISTS public.blog_posts (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     title TEXT NOT NULL,
     slug TEXT UNIQUE NOT NULL,
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS public.reviews (
 );
 
 -- Create Site Settings table
-CREATE TABLE public.site_settings (
+CREATE TABLE IF NOT EXISTS public.site_settings (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     site_name TEXT DEFAULT '${DEFAULT_SITE_NAME}',
     site_logo_url TEXT,

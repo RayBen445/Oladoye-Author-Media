@@ -16,6 +16,8 @@ type Review = {
   };
 };
 
+import AdminLayout from "../../components/AdminLayout";
+
 export default function AdminReviews() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,13 +97,16 @@ export default function AdminReviews() {
 
   if (loading) {
     return (
+    <AdminLayout>
       <div className="flex justify-center items-center h-64">
         <Loader2 className="animate-spin text-primary" size={32} />
       </div>
+    </AdminLayout>
     );
   }
 
   return (
+    <AdminLayout>
     <div className="max-w-6xl mx-auto space-y-8">
       <div className="flex justify-between items-center">
         <div>
@@ -175,5 +180,6 @@ export default function AdminReviews() {
         )}
       </div>
     </div>
+    </AdminLayout>
   );
 }

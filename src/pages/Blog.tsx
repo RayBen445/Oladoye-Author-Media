@@ -9,6 +9,11 @@ export default function Blog() {
   const { posts, loading } = useBlogPosts();
   const { settings } = useSiteSettings();
   const [selectedGenre, setSelectedGenre] = useState("All");
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  const loadMore = () => {
+    setVisibleCount(prev => prev + 6);
+  };
 
   const genres = useMemo(() => {
     const g = ["All"];
@@ -25,7 +30,8 @@ export default function Blog() {
   }, [posts, selectedGenre]);
 
   const featuredPost = filteredPosts[0];
-  const regularPosts = filteredPosts.slice(1);
+  const regularPosts = filteredPosts.slice(1, visibleCount);
+  const hasMore = filteredPosts.length > visibleCount;
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
