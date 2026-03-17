@@ -1,3 +1,4 @@
+import Reviews from "../components/Reviews";
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { useParams, Link } from "react-router-dom";
