@@ -4,11 +4,40 @@ import { ArrowLeft, Calendar, User, Share2, MessageCircle, Clock, Loader2 } from
 import ReactMarkdown from "react-markdown";
 import { usePost } from "../hooks/useBlogPosts";
 import { useSiteSettings } from "../hooks/useSiteSettings";
+import { useToast } from "../components/Toast";
+import Comments from "../components/Comments";
+
 
 export default function BlogPostDetail() {
   const { slug } = useParams();
   const { post, loading } = usePost(slug || "");
   const { settings } = useSiteSettings();
+  const { showToast } = useToast();
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: post?.title,
+          text: post?.excerpt || "Check out this post!",
+          url: window.location.href,
+        });
+      } catch (error) {
+        console.error("Error sharing:", error);
+      }
+    } else {
+      await navigator.clipboard.writeText(window.location.href);
+      showToast("Link copied to clipboard!", "success");
+    }
+  };
+
+  const scrollToComments = () => {
+    const commentsSection = document.getElementById('comments');
+    if (commentsSection) {
+      commentsSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
 
   if (loading) {
     return (
@@ -67,7 +96,7 @@ export default function BlogPostDetail() {
             </div>
             <div className="flex items-center space-x-2">
               <User size={18} />
-              <span>{post.author_name}</span>
+              <span>{post.author_name || settings?.author_name || "Author"}</span>
             </div>
           </div>
         </div>
@@ -82,11 +111,11 @@ export default function BlogPostDetail() {
         </div>
 
         <div className="flex justify-center space-x-4 py-4 border-y border-primary/10">
-          <button className="flex items-center space-x-2 px-4 py-2 hover:text-primary transition-colors font-bold text-taupe">
+          <button onClick={handleShare} className="flex items-center space-x-2 px-4 py-2 hover:text-primary transition-colors font-bold text-taupe">
             <Share2 size={18} />
             <span>Share</span>
           </button>
-          <button className="flex items-center space-x-2 px-4 py-2 hover:text-primary transition-colors font-bold text-taupe">
+          <button onClick={scrollToComments} className="flex items-center space-x-2 px-4 py-2 hover:text-primary transition-colors font-bold text-taupe">
             <MessageCircle size={18} />
             <span>Comment</span>
           </button>
@@ -137,6 +166,8 @@ export default function BlogPostDetail() {
             </div>
           </div>
         </div>
+
+        {post && <Comments postId={post.id} />}
       </motion.article>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
-import { uploadImage } from '../../lib/supabase';
+import { uploadImageWithProgress } from '../../lib/supabase';
 import { useToast } from '../Toast';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -19,6 +19,7 @@ type ImageUploadProps = {
 
 export default function ImageUpload({ value, onChange, label, bucket = 'images', maxSizeMB, restrictFormats, hint, aspectRatio }: ImageUploadProps) {
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useToast();
 
@@ -38,11 +39,16 @@ export default function ImageUpload({ value, onChange, label, bucket = 'images',
       return;
     }
 
+
     setUploading(true);
+    setUploadProgress(0);
     try {
-      const url = await uploadImage(file, bucket);
+      const url = await uploadImageWithProgress(file, (progress) => {
+        setUploadProgress(Math.round(progress));
+      }, bucket);
       onChange(url);
     } catch (error: any) {
+
       showToast('Error uploading image: ' + error.message, 'error');
     } finally {
       setUploading(false);
@@ -102,9 +108,20 @@ export default function ImageUpload({ value, onChange, label, bucket = 'images',
             className={`w-full ${containerClass} rounded-2xl border-2 border-dashed border-primary/20 bg-soft-cream/30 hover:bg-soft-cream/50 transition-colors flex flex-col items-center justify-center space-y-2 text-taupe group`}
             style={containerStyle}
           >
+
             {uploading ? (
-              <Loader2 className="animate-spin text-primary" size={32} />
+              <div className="flex flex-col items-center space-y-3 w-full px-6">
+                <Loader2 className="animate-spin text-primary" size={32} />
+                <div className="w-full bg-soft-cream/50 rounded-full h-2">
+                  <div
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <span className="text-sm font-medium text-primary">{uploadProgress}% Uploaded</span>
+              </div>
             ) : (
+
               <>
                 <div className="p-3 bg-white rounded-full shadow-sm group-hover:scale-110 transition-transform">
                   <Upload size={24} className="text-primary" />

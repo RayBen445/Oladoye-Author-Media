@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSiteSettings } from '../../hooks/useSiteSettings';
 import { X, Save, Loader2, AlertCircle } from 'lucide-react';
 import { supabase, type Book } from '../../lib/supabase';
@@ -49,8 +49,64 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
       selar_link: '',
       featured: false,
       order: 0,
+      is_draft: false,
     }
   );
+
+
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const formDataRef = useRef(formData);
+
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+
+  // Handle auto-save effect
+  useEffect(() => {
+    // Only auto-save if we have at least a title and a slug
+    if (!formData.title || !formData.slug) return;
+
+    const timer = setTimeout(async () => {
+      setIsAutoSaving(true);
+      try {
+        const dataToSave = { ...formDataRef.current };
+        if (book?.id) {
+          const { error } = await supabase
+            .from('books')
+            .update(dataToSave)
+            .eq('id', book.id);
+          if (error) throw error;
+          setLastSaved(new Date());
+        } else if (dataToSave.id) {
+          const { error } = await supabase
+            .from('books')
+            .update(dataToSave)
+            .eq('id', dataToSave.id);
+          if (error) throw error;
+          setLastSaved(new Date());
+        } else {
+          // It's a new book without an ID yet, create it and store the ID in formData
+          const { data, error } = await supabase
+            .from('books')
+            .insert([dataToSave])
+            .select()
+            .single();
+          if (error) throw error;
+          if (data) {
+            setFormData(prev => ({ ...prev, id: data.id }));
+            setLastSaved(new Date());
+          }
+        }
+      } catch (err) {
+        console.error('Auto-save failed:', err);
+      } finally {
+        setIsAutoSaving(false);
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [formData, book?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,7 +264,17 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
             </div>
           </div>
 
+
           <div className="flex items-center space-x-6">
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.is_draft || false}
+                onChange={(e) => setFormData({ ...formData, is_draft: e.target.checked })}
+                className="w-5 h-5 rounded border-primary/20 text-primary focus:ring-primary/20"
+              />
+              <span className="text-sm font-bold text-deep-brown">Save as Draft</span>
+            </label>
             <label className="flex items-center space-x-3 cursor-pointer">
               <input 
                 type="checkbox" 
@@ -230,7 +296,13 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
           </div>
 
           <div className="pt-6 border-t border-primary/10 flex justify-end space-x-4">
-            <button 
+
+            {lastSaved && (
+              <div className="text-xs text-taupe flex items-center mr-auto">
+                {isAutoSaving ? 'Saving...' : `Last saved at ${lastSaved.toLocaleTimeString()}`}
+              </div>
+            )}
+            <button
               type="button"
               onClick={onClose}
               className="px-6 py-3 text-taupe font-bold hover:bg-soft-cream rounded-xl transition-colors"

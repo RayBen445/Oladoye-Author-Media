@@ -3,9 +3,11 @@ import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { Calendar, User, ArrowRight, Loader2 } from "lucide-react";
 import { useBlogPosts } from "../hooks/useBlogPosts";
+import { useSiteSettings } from "../hooks/useSiteSettings";
 
 export default function Blog() {
   const { posts, loading } = useBlogPosts();
+  const { settings } = useSiteSettings();
   const [selectedGenre, setSelectedGenre] = useState("All");
 
   const genres = useMemo(() => {
@@ -92,7 +94,7 @@ export default function Blog() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <User size={16} />
-                      <span>{featuredPost.author_name}</span>
+                      <span>{featuredPost.author_name || settings?.author_name || "Author"}</span>
                     </div>
                   </div>
                   <div className="text-primary font-bold flex items-center space-x-2">

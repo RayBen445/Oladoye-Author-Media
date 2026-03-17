@@ -9,6 +9,54 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseAnonKey || 'placeholder');
 
+
+export function uploadImageWithProgress(file: File, onProgress: (progress: number) => void, bucket: string = 'images'): Promise<string> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { data: session } = await supabase.auth.getSession();
+      const token = session?.session?.access_token || supabaseAnonKey;
+
+      const url = `${supabaseUrl}/storage/v1/object/${bucket}/${filePath}`;
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.setRequestHeader('apikey', supabaseAnonKey);
+      xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+      // Supabase expects Cache-Control and x-upsert for basic file upload mimicking SDK
+      xhr.setRequestHeader('x-upsert', 'false');
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = (e.loaded / e.total) * 100;
+          onProgress(percentComplete);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const { data: { publicUrl } } = supabase.storage
+            .from(bucket)
+            .getPublicUrl(filePath);
+          resolve(publicUrl);
+        } else {
+          reject(new Error(`Upload failed with status ${xhr.status}: ${xhr.responseText}`));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error('Upload failed due to network error.'));
+
+      xhr.send(file);
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
 export async function uploadImage(file: File, bucket: string = 'images') {
   const fileExt = file.name.split('.').pop();
   const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
@@ -41,6 +89,7 @@ export type Book = {
   genre: string;
   gumroad_link: string;
   selar_link?: string;
+  is_draft?: boolean;
   featured: boolean;
   order: number;
   created_at: string;
@@ -57,6 +106,7 @@ export type BlogPost = {
   author_name: string;
   published: boolean;
   published_at: string;
+  is_draft?: boolean;
   created_at: string;
 };
 

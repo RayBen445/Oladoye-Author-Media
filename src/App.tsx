@@ -12,6 +12,8 @@ import AdminBlog from "./pages/admin/Blog";
 import AdminSettings from "./pages/admin/Settings";
 import AdminSubscribers from "./pages/admin/Subscribers";
 import AdminNewsletterHistory from "./pages/admin/NewsletterHistory";
+import AdminComments from "./pages/admin/Comments";
+import AdminReviews from "./pages/admin/Reviews";
 import Login from "./pages/Login";
 import ProtectedRoute from "./components/ProtectedRoute";
 import DatabaseSetup from "./components/DatabaseSetup";
@@ -57,6 +59,8 @@ export default function App() {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/books" element={<AdminBooks />} />
                 <Route path="/admin/blog" element={<AdminBlog />} />
+                <Route path="/admin/comments" element={<AdminComments />} />
+                <Route path="/admin/reviews" element={<AdminReviews />} />
                 <Route path="/admin/subscribers" element={<AdminSubscribers />} />
                 <Route path="/admin/newsletters" element={<AdminNewsletterHistory />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
