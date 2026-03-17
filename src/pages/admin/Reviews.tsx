@@ -22,6 +22,8 @@ export default function AdminReviews() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [processingBulk, setProcessingBulk] = useState(false);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -54,6 +56,57 @@ export default function AdminReviews() {
       setLoading(false);
     }
   }
+
+
+  const toggleSelection = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.size === reviews.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(reviews.map(r => r.id)));
+    }
+  };
+
+  const handleBulkAction = async (action: 'approve' | 'reject' | 'delete') => {
+    if (selectedIds.size === 0) return;
+
+    if (action === 'delete' && !window.confirm(`Are you sure you want to delete ${selectedIds.size} reviews?`)) {
+      return;
+    }
+
+    setProcessingBulk(true);
+    try {
+      const idsArray = Array.from(selectedIds);
+
+      if (action === 'delete') {
+        const { error } = await supabase.from('reviews').delete().in('id', idsArray);
+        if (error) throw error;
+        setReviews(current => current.filter(r => !selectedIds.has(r.id)));
+        showToast(`${idsArray.length} reviews deleted`, 'success');
+      } else {
+        const isApproved = action === 'approve';
+        const { error } = await supabase.from('reviews').update({ approved: isApproved }).in('id', idsArray);
+        if (error) throw error;
+        setReviews(current => current.map(r => selectedIds.has(r.id) ? { ...r, approved: isApproved } : r));
+        showToast(`${idsArray.length} reviews ${action}d`, 'success');
+      }
+      setSelectedIds(new Set());
+    } catch (err: any) {
+      console.error('Bulk action failed:', err);
+      showToast(err.message || 'Action failed', 'error');
+    } finally {
+      setProcessingBulk(false);
+    }
+  };
 
   async function toggleApproval(id: string, currentStatus: boolean) {
     setProcessing(id);
@@ -115,6 +168,44 @@ export default function AdminReviews() {
         </div>
       </div>
 
+
+      {reviews.length > 0 && (
+        <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-primary/10 mb-4">
+          <div className="flex items-center space-x-4">
+            <input
+              type="checkbox"
+              checked={selectedIds.size === reviews.length && reviews.length > 0}
+              onChange={toggleAll}
+              className="w-5 h-5 rounded border-primary/20 text-primary focus:ring-primary"
+            />
+            <span className="text-sm font-bold text-taupe uppercase tracking-widest">{selectedIds.size} Selected</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => handleBulkAction('approve')}
+              disabled={selectedIds.size === 0 || processingBulk}
+              className="px-4 py-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-xl font-bold text-sm transition-colors disabled:opacity-50"
+            >
+              Approve
+            </button>
+            <button
+              onClick={() => handleBulkAction('reject')}
+              disabled={selectedIds.size === 0 || processingBulk}
+              className="px-4 py-2 bg-amber-100 text-amber-700 hover:bg-amber-200 rounded-xl font-bold text-sm transition-colors disabled:opacity-50"
+            >
+              Reject
+            </button>
+            <button
+              onClick={() => handleBulkAction('delete')}
+              disabled={selectedIds.size === 0 || processingBulk}
+              className="px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-xl font-bold text-sm transition-colors disabled:opacity-50"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-3xl p-8 shadow-sm border border-primary/10">
         {reviews.length === 0 ? (
           <div className="text-center py-12 text-taupe">
@@ -125,6 +216,12 @@ export default function AdminReviews() {
           <div className="space-y-6">
             {reviews.map((review) => (
               <div key={review.id} className="flex flex-col md:flex-row justify-between items-start gap-6 p-6 bg-soft-cream/30 rounded-2xl border border-primary/5 hover:border-primary/20 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(review.id)}
+                  onChange={() => toggleSelection(review.id)}
+                  className="mt-1.5 w-5 h-5 rounded border-primary/20 text-primary focus:ring-primary"
+                />
                 <div className="space-y-3 flex-1">
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="font-bold text-deep-brown">{review.author_name}</span>

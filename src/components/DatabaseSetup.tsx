@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS public.books (
     featured BOOLEAN DEFAULT false,
     "order" INTEGER DEFAULT 0,
     is_draft BOOLEAN DEFAULT false,
+    is_coming_soon BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -53,6 +54,7 @@ CREATE TABLE IF NOT EXISTS public.comments (
     post_id UUID NOT NULL REFERENCES public.blog_posts(id) ON DELETE CASCADE,
     author_name TEXT NOT NULL,
     content TEXT NOT NULL,
+    approved BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -106,6 +108,31 @@ CREATE TABLE IF NOT EXISTS public.newsletter_campaigns (
     sent_at TIMESTAMPTZ DEFAULT now()
 );
 
+
+-- Create Analytics Events table
+CREATE TABLE IF NOT EXISTS public.analytics_events (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    event_type TEXT NOT NULL,
+    path TEXT,
+    resource_id UUID,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Create Media Library table
+CREATE TABLE IF NOT EXISTS public.media_library (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    filename TEXT NOT NULL,
+    url TEXT NOT NULL,
+    size INTEGER,
+    mime_type TEXT,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Note: In a real migration you would alter, but for initial setup:
+-- comments already exists, so we should make sure 'approved' is in it.
+-- Let's replace the comments table definition.
+
 -- Set up Row Level Security (RLS)
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews ENABLE ROW LEVEL SECURITY;
@@ -115,7 +142,15 @@ ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.newsletter_campaigns ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public read access on comments" ON public.comments FOR SELECT USING (true);
+ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.media_library ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public insert on analytics_events" ON public.analytics_events FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow authenticated read access on analytics_events" ON public.analytics_events FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow public read access on media_library" ON public.media_library FOR SELECT USING (true);
+CREATE POLICY "Allow authenticated full access on media_library" ON public.media_library FOR ALL USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Allow public read access on approved comments" ON public.comments FOR SELECT USING (approved = true);
 CREATE POLICY "Allow public insert on comments" ON public.comments FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public read access on approved reviews" ON public.reviews FOR SELECT USING (approved = true);
 CREATE POLICY "Allow public insert on reviews" ON public.reviews FOR INSERT WITH CHECK (true);

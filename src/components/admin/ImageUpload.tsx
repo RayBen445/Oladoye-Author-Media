@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
-import { uploadImageWithProgress } from '../../lib/supabase';
+import { uploadImageWithProgress, supabase } from '../../lib/supabase';
+import { useEffect } from 'react';
 import { useToast } from '../Toast';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -21,6 +22,7 @@ export default function ImageUpload({ value, onChange, label, bucket = 'images',
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const { showToast } = useToast();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,7 +69,18 @@ export default function ImageUpload({ value, onChange, label, bucket = 'images',
 
   return (
     <div className="space-y-2">
-      <label className="text-xs font-bold text-taupe uppercase tracking-widest">{label}</label>
+      <div className="flex justify-between items-center">
+        <label className="text-xs font-bold text-taupe uppercase tracking-widest">{label}</label>
+
+        <button
+          type="button"
+          onClick={() => setIsLibraryOpen(true)}
+          className="text-xs font-bold text-primary hover:text-primary/80 transition-colors uppercase tracking-widest"
+        >
+          Select from Library
+        </button>
+
+      </div>
       
       <div className="relative group">
         {value ? (
@@ -160,6 +173,79 @@ export default function ImageUpload({ value, onChange, label, bucket = 'images',
           onChange={(e) => onChange(e.target.value)}
           className="w-full pl-10 pr-4 py-2 text-sm rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
         />
+      </div>
+      <MediaLibraryModal
+        isOpen={isLibraryOpen}
+        onClose={() => setIsLibraryOpen(false)}
+        onSelect={(url) => { onChange(url); setIsLibraryOpen(false); }}
+      />
+    </div>
+  );
+}
+
+
+function MediaLibraryModal({ isOpen, onClose, onSelect }: { isOpen: boolean, onClose: () => void, onSelect: (url: string) => void }) {
+  const [media, setMedia] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchMedia();
+    }
+  }, [isOpen]);
+
+  async function fetchMedia() {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.from('media_library').select('*').order('created_at', { ascending: false });
+      if (error) {
+        if (error.code !== '42P01') console.error('Error fetching media:', error);
+        setMedia([]);
+      } else {
+        setMedia(data || []);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl p-6 w-full max-w-4xl max-h-[80vh] flex flex-col shadow-2xl">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-serif font-bold text-deep-brown">Select from Media Library</h2>
+          <button onClick={onClose} className="p-2 hover:bg-soft-cream/50 rounded-full transition-colors">
+            <X size={24} />
+          </button>
+        </div>
+
+        <div className="flex-grow overflow-y-auto pr-2">
+          {loading ? (
+            <div className="flex justify-center items-center h-32">
+              <Loader2 className="animate-spin text-primary" size={32} />
+            </div>
+          ) : media.length === 0 ? (
+            <div className="text-center py-12 text-taupe">
+              <ImageIcon className="mx-auto h-12 w-12 text-primary/20 mb-4" />
+              <p>No images found in your library.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {media.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => onSelect(item.url)}
+                  className="cursor-pointer group relative rounded-xl overflow-hidden border border-primary/10 hover:border-primary/40 transition-all aspect-square bg-soft-cream/30 flex items-center justify-center p-2"
+                >
+                  <img src={item.url} alt={item.filename} className="max-w-full max-h-full object-contain" />
+                  <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

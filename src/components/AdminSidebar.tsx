@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard,
+  Image as ImageIcon,
   MessageCircle,
   Star, Book, PenTool, Settings, LogOut, ExternalLink, Users, X, Mail } from "lucide-react";
 import { supabase } from "../lib/supabase";
@@ -30,6 +31,7 @@ export default function AdminSidebar({ mobileOpen = false, onClose }: AdminSideb
     { icon: PenTool, label: "Manage Blog", path: "/admin/blog" },
     { icon: Users, label: "Subscribers", path: "/admin/subscribers" },
     { icon: Mail, label: "Newsletters", path: "/admin/newsletters" },
+    { icon: ImageIcon, label: "Manage Media", path: "/admin/media" },
     { icon: Settings, label: "Site Settings", path: "/admin/settings" },
   ];
 
