@@ -1,3 +1,4 @@
+import { useAnalytics } from '../hooks/useAnalytics';
 import Reviews from "../components/Reviews";
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
@@ -15,6 +16,7 @@ export default function BookDetail() {
   const [loading, setLoading] = useState(true);
   const [favorite, setFavorite] = useState(false);
   const { showToast } = useToast();
+  const { trackEvent } = useAnalytics();
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -94,6 +96,13 @@ export default function BookDetail() {
       });
     };
   }, [book]);
+
+
+  const handlePurchaseClick = () => {
+    if (book) {
+      trackEvent('book_purchase_click', { title: book.title, platform: 'gumroad' }, book.id);
+    }
+  };
 
   const shareBook = async () => {
     if (!book) return;
@@ -245,7 +254,8 @@ export default function BookDetail() {
             
             {book.gumroad_link ? (
               <a 
-                href={book.gumroad_link} 
+                href={book.gumroad_link}
+                onClick={handlePurchaseClick}
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="w-full py-4 bg-primary text-soft-cream rounded-full font-bold flex items-center justify-center space-x-2 hover:bg-primary/90 transition-all shadow-lg hover:shadow-primary/20"

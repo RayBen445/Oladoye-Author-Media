@@ -11,6 +11,7 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminBooks from "./pages/admin/Books";
 import AdminBlog from "./pages/admin/Blog";
 import AdminSettings from "./pages/admin/Settings";
+import AdminMediaLibrary from "./pages/admin/MediaLibrary";
 import AdminSubscribers from "./pages/admin/Subscribers";
 import AdminNewsletterHistory from "./pages/admin/NewsletterHistory";
 import AdminComments from "./pages/admin/Comments";
@@ -20,7 +21,14 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import DatabaseSetup from "./components/DatabaseSetup";
 import { useSiteSettings } from "./hooks/useSiteSettings";
 import { Loader2 } from "lucide-react";
+import { useAnalytics } from "./hooks/useAnalytics";
 import { ToastProvider } from "./components/Toast";
+
+
+function AnalyticsTracker() {
+  useAnalytics();
+  return null;
+}
 
 export default function App() {
     const { settings, error, loading } = useSiteSettings();
@@ -56,6 +64,7 @@ export default function App() {
   return (
     <ToastProvider>
       <Router>
+        <AnalyticsTracker />
         <div className="min-h-screen flex flex-col">
           <Navbar />
           <main className="flex-grow">
@@ -77,6 +86,7 @@ export default function App() {
                 <Route path="/admin/subscribers" element={<AdminSubscribers />} />
                 <Route path="/admin/newsletters" element={<AdminNewsletterHistory />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
+                <Route path="/admin/media" element={<AdminMediaLibrary />} />
               </Route>
             </Routes>
           </main>

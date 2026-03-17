@@ -1,3 +1,4 @@
+import { BarChart3, MousePointerClick } from 'lucide-react';
 import { useEffect, useState } from "react";
 import AdminLayout from "../../components/AdminLayout";
 import { Book, PenTool, Users, TrendingUp, Plus, ArrowRight, Loader2, ShieldAlert, XCircle, Mail } from "lucide-react";
@@ -14,6 +15,7 @@ export default function AdminDashboard() {
   const [recentCampaigns, setRecentCampaigns] = useState<NewsletterCampaign[]>([]);
   const [totalNewsletters, setTotalNewsletters] = useState(0);
   const navigate = useNavigate();
+  const [analyticsStats, setAnalyticsStats] = useState({ pageViews: 0, bookClicks: 0, newsletterSignups: 0 });
   const authorName = settings?.author_name || "Author";
 
   useEffect(() => {
@@ -143,6 +145,40 @@ export default function AdminDashboard() {
                 <Plus size={20} />
                 <span>New Post</span>
               </Link>
+            </div>
+          </div>
+
+
+          {/* Analytics Widget */}
+          <div className="bg-white rounded-2xl shadow-sm border border-primary/5 p-6 mb-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-serif font-bold text-deep-brown flex items-center gap-2">
+                <TrendingUp size={24} className="text-primary" />
+                Analytics Overview
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-soft-cream/30 border border-primary/5">
+                <div className="p-3 bg-blue-100 text-blue-600 rounded-lg"><BarChart3 size={24} /></div>
+                <div>
+                  <p className="text-sm text-taupe font-bold uppercase tracking-widest">Page Views</p>
+                  <p className="text-2xl font-bold text-deep-brown">{analyticsStats.pageViews}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-soft-cream/30 border border-primary/5">
+                <div className="p-3 bg-emerald-100 text-emerald-600 rounded-lg"><MousePointerClick size={24} /></div>
+                <div>
+                  <p className="text-sm text-taupe font-bold uppercase tracking-widest">Book Interactions</p>
+                  <p className="text-2xl font-bold text-deep-brown">{analyticsStats.bookClicks}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-soft-cream/30 border border-primary/5">
+                <div className="p-3 bg-purple-100 text-purple-600 rounded-lg"><Users size={24} /></div>
+                <div>
+                  <p className="text-sm text-taupe font-bold uppercase tracking-widest">Newsletter Conversions</p>
+                  <p className="text-2xl font-bold text-deep-brown">{analyticsStats.newsletterSignups}</p>
+                </div>
+              </div>
             </div>
           </div>
 

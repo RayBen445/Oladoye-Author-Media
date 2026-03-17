@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Send, Loader2, CheckCircle2 } from 'lucide-react';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 export default function Newsletter() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { trackEvent } = useAnalytics();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +36,7 @@ export default function Newsletter() {
       }
 
       setSuccess(true);
+      trackEvent('newsletter_signup', { email });
       setEmail('');
     } catch (err: any) {
       setError(err.message);
