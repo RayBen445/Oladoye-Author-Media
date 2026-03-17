@@ -3,6 +3,7 @@ import { useSiteSettings } from '../../hooks/useSiteSettings';
 import { X, Save, Loader2, AlertCircle } from 'lucide-react';
 import { supabase, type Book } from '../../lib/supabase';
 import ImageUpload from './ImageUpload';
+import RichTextEditor from './RichTextEditor';
 
 type BookFormProps = {
   book?: Book | null;
@@ -226,11 +227,9 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
 
           <div className="space-y-2">
             <label className="text-xs font-bold text-taupe uppercase tracking-widest">Standard Description</label>
-            <textarea 
-              rows={4}
-              value={formData.long_description}
-              onChange={(e) => setFormData({ ...formData, long_description: e.target.value })}
-              className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20 resize-none"
+            <RichTextEditor
+              value={formData.long_description || ''}
+              onChange={(v) => setFormData({ ...formData, long_description: v })}
             />
           </div>
 

@@ -11,6 +11,11 @@ export default function Books() {
   const authorName = settings?.author_name || 'the author';
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("All");
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  const loadMore = () => {
+    setVisibleCount(prev => prev + 6);
+  };
 
   const genres = useMemo(() => {
     const g = ["All"];
@@ -28,6 +33,9 @@ export default function Books() {
       return matchesSearch && matchesGenre;
     });
   }, [books, searchTerm, selectedGenre]);
+
+  const visibleBooks = filteredBooks.slice(0, visibleCount);
+  const hasMore = filteredBooks.length > visibleCount;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -76,7 +84,7 @@ export default function Books() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {filteredBooks.map((book, i) => (
+          {visibleBooks.map((book, i) => (
             <motion.div 
               key={book.id}
               initial={{ opacity: 0, scale: 0.95 }}
