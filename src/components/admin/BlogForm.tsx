@@ -168,11 +168,11 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
       setIsAutoSaving(true);
       try {
         const dataToSave = { ...formDataRef.current };
-        if (post?.id) {
+        if (formData.id) {
           const { error } = await supabase
             .from('blog_posts')
             .update(dataToSave)
-            .eq('id', post.id);
+            .eq('id', formData.id);
           if (error) throw error;
           setLastSaved(new Date());
         } else if (dataToSave.id) {
@@ -211,11 +211,11 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
     setFormError(null);
 
     try {
-      if (post?.id) {
+      if (formData.id) {
         const { error } = await supabase
           .from('blog_posts')
           .update(formData)
-          .eq('id', post.id);
+          .eq('id', formData.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
@@ -330,7 +330,7 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
               <input
                 type="checkbox"
                 checked={formData.is_draft || false}
-                onChange={(e) => setFormData({ ...formData, is_draft: e.target.checked })}
+                onChange={(e) => setFormData({ ...formData, is_draft: e.target.checked, published: !e.target.checked })}
                 className="w-5 h-5 rounded border-primary/20 text-primary focus:ring-primary/20"
               />
               <span className="text-sm font-bold text-deep-brown">Save as Draft</span>
@@ -339,7 +339,7 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
               <input
                 type="checkbox"
                 checked={formData.published}
-                onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
+                onChange={(e) => setFormData({ ...formData, published: e.target.checked, is_draft: !e.target.checked })}
                 className="w-5 h-5 rounded border-primary/20 text-primary focus:ring-primary/20"
               />
               <span className="text-sm font-bold text-deep-brown">Published</span>
