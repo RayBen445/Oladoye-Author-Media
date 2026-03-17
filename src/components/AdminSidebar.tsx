@@ -1,5 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Book, PenTool, Settings, LogOut, ExternalLink, Users, X, Mail } from "lucide-react";
+import { LayoutDashboard,
+  MessageCircle,
+  Star, Book, PenTool, Settings, LogOut, ExternalLink, Users, X, Mail } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 interface AdminSidebarProps {

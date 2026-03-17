@@ -263,6 +263,8 @@ export default function BookDetail() {
           </div>
         </motion.div>
       </div>
+
+      {book && <Reviews bookId={book.id} />}
     </div>
   );
 }
