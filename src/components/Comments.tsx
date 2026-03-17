@@ -33,7 +33,7 @@ export default function Comments({ postId }: CommentsProps) {
         event: 'INSERT',
         schema: 'public',
         table: 'comments',
-        filter: \`post_id=eq.\${postId}\`
+        filter: `post_id=eq.${postId}`
       }, payload => {
         setComments(current => [payload.new as Comment, ...current]);
       })
