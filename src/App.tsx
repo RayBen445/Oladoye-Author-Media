@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
@@ -22,11 +23,23 @@ import { Loader2 } from "lucide-react";
 import { ToastProvider } from "./components/Toast";
 
 export default function App() {
-  const { error, loading } = useSiteSettings();
+    const { settings, error, loading } = useSiteSettings();
 
   // Check if the error is "relation does not exist" (Postgres code 42P01)
   // Supabase error messages often contain the table name
   const isMissingTable = error?.includes('relation') || error?.includes('cache');
+
+  useEffect(() => {
+    if (settings?.favicon_url) {
+      let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement('link') as HTMLLinkElement;
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = settings.favicon_url;
+    }
+  }, [settings?.favicon_url]);
 
   if (loading) {
     return (

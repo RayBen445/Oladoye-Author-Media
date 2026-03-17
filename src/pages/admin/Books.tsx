@@ -36,9 +36,9 @@ export default function AdminBooks() {
 
   return (
     <AdminLayout>
-      <main className="p-8">
+      <main className="p-4 sm:p-8">
         <div className="max-w-6xl mx-auto space-y-8">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
             <div>
               <h1 className="text-3xl font-serif font-bold text-deep-brown">Manage Books</h1>
               <p className="text-taupe font-medium">Add, edit, or remove books from your catalog.</p>
@@ -67,7 +67,7 @@ export default function AdminBooks() {
           </div>
 
           {/* Books Table */}
-          <div className="bg-white rounded-2xl shadow-sm border border-primary/5 overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm border border-primary/5 overflow-x-auto">
             {loading ? (
               <div className="flex justify-center py-20">
                 <Loader2 className="animate-spin text-primary" size={40} />
@@ -105,8 +105,15 @@ export default function AdminBooks() {
                       <td className="px-6 py-4">
                         <span className="text-sm font-medium text-deep-brown">{book.genre}</span>
                       </td>
+
                       <td className="px-6 py-4">
-                        <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold uppercase tracking-widest">Active</span>
+                        {book.is_draft ? (
+                          <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-[10px] font-bold uppercase tracking-widest">Draft</span>
+                        ) : book.is_coming_soon ? (
+                          <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-[10px] font-bold uppercase tracking-widest">Coming Soon</span>
+                        ) : (
+                          <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold uppercase tracking-widest">Active</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         {book.featured ? (

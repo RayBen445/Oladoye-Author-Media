@@ -25,6 +25,8 @@ export default function AdminSidebar({ mobileOpen = false, onClose }: AdminSideb
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
     { icon: Book, label: "Manage Books", path: "/admin/books" },
+    { icon: MessageCircle, label: "Manage Comments", path: "/admin/comments" },
+    { icon: Star, label: "Manage Reviews", path: "/admin/reviews" },
     { icon: PenTool, label: "Manage Blog", path: "/admin/blog" },
     { icon: Users, label: "Subscribers", path: "/admin/subscribers" },
     { icon: Mail, label: "Newsletters", path: "/admin/newsletters" },

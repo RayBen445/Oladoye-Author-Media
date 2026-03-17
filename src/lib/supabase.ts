@@ -90,6 +90,7 @@ export type Book = {
   gumroad_link: string;
   selar_link?: string;
   is_draft?: boolean;
+  is_coming_soon?: boolean;
   featured: boolean;
   order: number;
   created_at: string;

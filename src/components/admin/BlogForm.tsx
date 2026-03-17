@@ -73,11 +73,7 @@ function ContentField({ label, value, onChange, required, rows = 8, placeholder,
           />
           <div className="flex justify-end space-x-2">
 
-            {lastSaved && (
-              <div className="text-xs text-taupe flex items-center mr-auto">
-                {isAutoSaving ? 'Saving...' : `Last saved at ${lastSaved.toLocaleTimeString()}`}
-              </div>
-            )}
+
             <button
               type="button"
               onClick={() => setShowInsert(false)}
