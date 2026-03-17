@@ -31,7 +31,7 @@ export default function AdminReviews() {
       setLoading(true);
       const { data, error } = await supabase
         .from("reviews")
-        .select(\`
+        .select(`
           id,
           book_id,
           author_name,
@@ -40,7 +40,7 @@ export default function AdminReviews() {
           approved,
           created_at,
           books ( title )
-        \`)
+        `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -66,7 +66,7 @@ export default function AdminReviews() {
       setReviews(current =>
         current.map(r => r.id === id ? { ...r, approved: !currentStatus } : r)
       );
-      showToast(\`Review \${!currentStatus ? 'approved' : 'hidden'} successfully\`, "success");
+      showToast(`Review ${!currentStatus ? 'approved' : 'hidden'} successfully`, "success");
     } catch (error: any) {
       console.error("Error toggling review approval:", error);
       showToast(error.message || "Failed to update review", "error");
@@ -149,7 +149,7 @@ export default function AdminReviews() {
                   <button
                     onClick={() => toggleApproval(review.id, review.approved)}
                     disabled={processing === review.id}
-                    className={\`p-2 rounded-xl transition-colors \${review.approved ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}\`}
+                    className={`p-2 rounded-xl transition-colors ${review.approved ? 'text-amber-600 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
                     title={review.approved ? "Hide Review" : "Approve Review"}
                   >
                     {processing === review.id ? (

@@ -29,14 +29,14 @@ export default function AdminComments() {
       setLoading(true);
       const { data, error } = await supabase
         .from("comments")
-        .select(\`
+        .select(`
           id,
           post_id,
           author_name,
           content,
           created_at,
           blog_posts ( title )
-        \`)
+        `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

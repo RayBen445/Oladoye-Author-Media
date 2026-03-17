@@ -38,7 +38,7 @@ export default function Reviews({ bookId }: ReviewsProps) {
         event: 'UPDATE',
         schema: 'public',
         table: 'reviews',
-        filter: \`book_id=eq.\${bookId}\`
+        filter: `book_id=eq.${bookId}`
       }, () => {
         fetchReviews();
       })
@@ -143,11 +143,11 @@ export default function Reviews({ bookId }: ReviewsProps) {
                 >
                   <Star
                     size={28}
-                    className={\`transition-colors \${
+                    className={`transition-colors ${
                       star <= (hoverRating || rating)
                         ? 'fill-accent text-accent'
                         : 'text-taupe/30'
-                    }\`}
+                    }`}
                   />
                 </button>
               ))}
