@@ -7,8 +7,11 @@ import { ArrowLeft, ShoppingCart, Star, Calendar, BookOpen, Share2, Loader2 } fr
 import { supabase, type Book } from "../lib/supabase";
 import { useToast } from "../components/Toast";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
+import rehypeSlug from "rehype-slug";
+import rehypeAutolinkHeadings from "rehype-autolink-headings";
 
 export default function BookDetail() {
   const { slug } = useParams();
@@ -235,7 +238,7 @@ export default function BookDetail() {
               {book.description}
             </p>
                         <div className="leading-relaxed whitespace-pre-wrap prose prose-taupe max-w-none">
-              <ReactMarkdown rehypePlugins={[rehypeRaw, rehypeSanitize]}>{book.long_description || ''}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeSanitize, rehypeSlug, [rehypeAutolinkHeadings, { behavior: "wrap" }]]}>{book.long_description || ''}</ReactMarkdown>
             </div>
           </div>
 
