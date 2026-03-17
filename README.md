@@ -134,6 +134,7 @@ vercel --prod
 - **Enhanced Media Library:** A dedicated media manager in the admin dashboard to reuse uploaded images across multiple blog posts or books.
 - **Comment Moderation Tools:** Improved UI for bulk-approving or rejecting user comments and book reviews.
 - **Automated Social Sharing:** Integration to automatically post new blog articles or "Coming Soon" book announcements to social media platforms.
+- **Text Correction Suggestions:** Implement a tool to provide AI-powered text correction and grammar suggestions while writing blog posts or book descriptions.
 
 ---
 
