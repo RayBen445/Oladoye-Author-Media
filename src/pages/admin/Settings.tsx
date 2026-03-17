@@ -17,6 +17,7 @@ export default function AdminSettings() {
     author_bio: "",
     author_email: "",
     author_profile_image_url: "",
+    blog_font: "font-sans",
     social_links: {
       twitter: "",
       instagram: "",
@@ -41,6 +42,7 @@ export default function AdminSettings() {
         author_bio: settings.author_bio || "",
         author_email: settings.author_email || "",
         author_profile_image_url: settings.author_profile_image_url || "",
+        blog_font: settings.blog_font || "font-sans",
         social_links: settings.social_links || {
           twitter: "",
           instagram: "",

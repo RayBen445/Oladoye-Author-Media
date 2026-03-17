@@ -5,6 +5,7 @@ import { useFeaturedBooks } from "../hooks/useBooks";
 import { useBlogPosts } from "../hooks/useBlogPosts";
 import { useSiteSettings } from "../hooks/useSiteSettings";
 import Newsletter from "../components/Newsletter";
+import WhatsAppForm from "../components/WhatsAppForm";
 
 export default function Home() {
   const { books: featuredBooks, loading: booksLoading } = useFeaturedBooks();
@@ -27,7 +28,8 @@ export default function Home() {
             className="w-full h-full object-cover opacity-20"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-soft-cream/0 via-soft-cream/50 to-soft-cream" />
+          <div className="absolute inset-0 bg-gradient-to-r from-soft-cream via-soft-cream/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-soft-cream/0 via-soft-cream/50 to-soft-cream opacity-80" />
         </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -40,10 +42,10 @@ export default function Home() {
             <span className="inline-block px-3 py-1 bg-accent/10 text-accent rounded-full text-sm font-semibold mb-4 tracking-wide uppercase">
               Welcome to the Library
             </span>
-            <h1 className="text-5xl md:text-7xl font-serif font-bold text-deep-brown leading-tight mb-6">
+            <h1 className="text-5xl md:text-8xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-br from-deep-brown via-primary to-accent leading-tight mb-6 drop-shadow-sm">
               {tagline.split(' ').map((word, i) => (
                 <span key={i}>
-                  {word === 'Breathe' ? <span className="text-primary italic">{word}</span> : word}{' '}
+                  {word === 'Breathe' ? <span className="text-accent italic drop-shadow-md">{word}</span> : word}{' '}
                 </span>
               ))}
             </h1>
@@ -225,6 +227,26 @@ export default function Home() {
               <Link to="/books" className="inline-block px-8 py-3 bg-deep-brown text-soft-cream rounded-full font-bold hover:bg-primary transition-colors">
                 Explore My Works
               </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* Coaching / WhatsApp Form */}
+      <section className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row gap-12 items-center">
+            <div className="w-full md:w-1/2 space-y-6">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-deep-brown">
+                Looking for Guidance?
+              </h2>
+              <p className="text-lg text-deep-brown/80 leading-relaxed">
+                Whether you want to learn how to write books, design them, or create engaging social media content, I'm here to help. Reach out directly via WhatsApp to discuss coaching opportunities.
+              </p>
+            </div>
+            <div className="w-full md:w-1/2">
+              <WhatsAppForm />
             </div>
           </div>
         </div>

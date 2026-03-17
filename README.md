@@ -11,7 +11,12 @@ A modern, full-featured author website and content management platform built wit
 ## ✨ Features
 
 - **Book Catalog** — Browse featured and full book listings with cover images, genres, and descriptions
-- **Blog** — Write and publish articles with rich Markdown content
+- **Blog** — Write and publish articles with rich Markdown content, multiple categories, and typography selection
+- **Podcasts** — Showcase podcast episodes alongside book releases and blog posts
+- **Coaching/Mentorship** — A direct WhatsApp inquiry form for coaching on writing, book design, and social media content creation
+- **Engagement** — Reader comments with nesting/replies, likes, and admin moderation tools (bulk approve/reject/reply)
+- **Analytics Integration** — Dashboard widget to track page views, book clicks, and newsletter signups
+- **Enhanced Media Library** — Drag, drop, multi-upload images and reuse them across posts with a unified Media Manager
 - **Author Profile** — Configurable bio, photo, tagline, and social links
 - **Newsletter Subscription** — Built-in subscriber capture and email notifications via Nodemailer
 - **Admin Dashboard** — Protected admin panel to manage books, blog posts, subscribers, and site settings
@@ -129,6 +134,8 @@ vercel --prod
 ---
 
 ## 🔮 Suggested Features / Future Roadmap
+
+*(Many of these have already been completed!)*
 
 - **Analytics Integration:** Add a dashboard widget to track page views, book clicks, and newsletter signup conversion rates.
 - **Enhanced Media Library:** A dedicated media manager in the admin dashboard to reuse uploaded images across multiple blog posts or books.

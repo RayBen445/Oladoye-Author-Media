@@ -21,6 +21,25 @@ export default function BookDetail() {
   const { showToast } = useToast();
   const { trackEvent } = useAnalytics();
 
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: book?.title,
+          text: book?.description,
+          url: window.location.href,
+        });
+      } catch (error) {
+        if ((error as any).name !== 'AbortError') {
+          showToast('Failed to share', 'error');
+        }
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      showToast("Link copied to clipboard", "success");
+    }
+  };
+
   useEffect(() => {
     const fetchBook = async () => {
       if (!slug) return;

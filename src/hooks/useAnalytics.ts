@@ -35,3 +35,33 @@ export function useAnalytics() {
 
   return { trackEvent };
 }
+
+export async function fetchAnalyticsStats() {
+  try {
+    const { data: pageViews, error: pvError } = await supabase
+      .from('analytics_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_type', 'page_view');
+
+    const { data: bookClicks, error: bcError } = await supabase
+      .from('analytics_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_type', 'book_click');
+
+    const { data: signups, error: sError } = await supabase
+      .from('analytics_events')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_type', 'newsletter_signup');
+
+    if (pvError || bcError || sError) throw new Error("Error fetching stats");
+
+    return {
+      pageViews: pageViews || 0,
+      bookClicks: bookClicks || 0,
+      newsletterSignups: signups || 0
+    };
+  } catch (error) {
+    console.error("fetchAnalyticsStats error", error);
+    return { pageViews: 0, bookClicks: 0, newsletterSignups: 0 };
+  }
+}

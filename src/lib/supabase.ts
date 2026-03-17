@@ -144,4 +144,5 @@ export type SiteSettings = {
   };
   about_content: string;
   footer_text: string;
+  blog_font?: string;
 };

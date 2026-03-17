@@ -5,6 +5,7 @@ import { Book, PenTool, Users, TrendingUp, Plus, ArrowRight, Loader2, ShieldAler
 import { Link, useNavigate } from "react-router-dom";
 import { useSiteSettings } from "../../hooks/useSiteSettings";
 import { useDashboardStats } from "../../hooks/useDashboardStats";
+import { fetchAnalyticsStats } from "../../hooks/useAnalytics";
 import { supabase } from "../../lib/supabase";
 import type { NewsletterCampaign } from "../../lib/supabase";
 
@@ -19,6 +20,16 @@ export default function AdminDashboard() {
   const authorName = settings?.author_name || "Author";
 
   useEffect(() => {
+    const loadAnalytics = async () => {
+      const stats = await fetchAnalyticsStats();
+      setAnalyticsStats({
+        pageViews: typeof stats.pageViews === 'number' ? stats.pageViews : (stats.pageViews ? stats.pageViews.length : 0),
+        bookClicks: typeof stats.bookClicks === 'number' ? stats.bookClicks : (stats.bookClicks ? stats.bookClicks.length : 0),
+        newsletterSignups: typeof stats.newsletterSignups === 'number' ? stats.newsletterSignups : (stats.newsletterSignups ? stats.newsletterSignups.length : 0)
+      });
+    };
+    loadAnalytics();
+
     // Disable right-click on admin dashboard for "advanced protection"
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
