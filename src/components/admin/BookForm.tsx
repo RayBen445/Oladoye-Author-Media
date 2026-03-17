@@ -147,7 +147,7 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-8 space-y-6">
           {formError && (
             <div className="flex items-start gap-3 px-4 py-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-800">
               <AlertCircle size={18} className="shrink-0 mt-0.5 text-red-500" />
@@ -265,7 +265,7 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
           </div>
 
 
-          <div className="flex items-center space-x-6">
+          <div className="flex flex-wrap items-center gap-6">
             <label className="flex items-center space-x-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -274,6 +274,15 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
                 className="w-5 h-5 rounded border-primary/20 text-primary focus:ring-primary/20"
               />
               <span className="text-sm font-bold text-deep-brown">Save as Draft</span>
+            </label>
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.is_coming_soon || false}
+                onChange={(e) => setFormData({ ...formData, is_coming_soon: e.target.checked })}
+                className="w-5 h-5 rounded border-primary/20 text-primary focus:ring-primary/20"
+              />
+              <span className="text-sm font-bold text-deep-brown">Coming Soon</span>
             </label>
             <label className="flex items-center space-x-3 cursor-pointer">
               <input 
@@ -295,7 +304,7 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
             </div>
           </div>
 
-          <div className="pt-6 border-t border-primary/10 flex justify-end space-x-4">
+          <div className="pt-6 border-t border-primary/10 flex flex-col sm:flex-row justify-end items-center gap-4 sm:gap-0 sm:space-x-4">
 
             {lastSaved && (
               <div className="text-xs text-taupe flex items-center mr-auto">
@@ -305,14 +314,14 @@ export default function BookForm({ book, onClose, onSuccess }: BookFormProps) {
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-3 text-taupe font-bold hover:bg-soft-cream rounded-xl transition-colors"
+              className="w-full sm:w-auto px-6 py-3 text-taupe font-bold hover:bg-soft-cream rounded-xl transition-colors"
             >
               Cancel
             </button>
             <button 
               type="submit"
               disabled={loading}
-              className="px-8 py-3 bg-primary text-soft-cream rounded-xl font-bold flex items-center space-x-2 shadow-lg hover:bg-primary/90 transition-all disabled:opacity-50"
+              className="w-full sm:w-auto px-8 py-3 bg-primary text-soft-cream rounded-xl font-bold flex justify-center items-center space-x-2 shadow-lg hover:bg-primary/90 transition-all disabled:opacity-50"
             >
               {loading ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
               <span>{book ? 'Update Book' : 'Save Book'}</span>
