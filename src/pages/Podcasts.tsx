@@ -81,13 +81,7 @@ export default function Podcasts() {
           </p>
         </div>
 
-        {podcasts.length === 0 ? (
-          <div className="text-center py-20 bg-soft-cream/30 rounded-3xl border border-primary/10">
-            <Headphones className="mx-auto h-16 w-16 text-taupe/30 mb-4" />
-            <h3 className="text-2xl font-serif font-bold text-deep-brown mb-2">Coming Soon</h3>
-            <p className="text-taupe">We are working on bringing you the best episodes.</p>
-          </div>
-        ) : (
+        {podcasts.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {podcasts.map((podcast, index) => (
               <motion.div
