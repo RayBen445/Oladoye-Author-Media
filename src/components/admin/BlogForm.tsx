@@ -149,6 +149,7 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
 
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [genreInput, setGenreInput] = useState('');
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(!!post?.id);
   const [formData, setFormData] = useState<Partial<BlogPost>>(
     post || {
@@ -319,13 +320,44 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
 
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-taupe uppercase tracking-widest">Genre / Category</label>
+            <label className="text-xs font-bold text-taupe uppercase tracking-widest">Categories</label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {(formData.genre || '').split(',').map((g) => g.trim()).filter(Boolean).map((genre, index) => (
+                <span key={index} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-medium flex items-center gap-1">
+                  {genre}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentGenres = (formData.genre || '').split(',').map(g => g.trim()).filter(Boolean);
+                      currentGenres.splice(index, 1);
+                      setFormData({ ...formData, genre: currentGenres.join(', ') });
+                    }}
+                    className="hover:text-accent transition-colors focus:outline-none"
+                  >
+                    <X size={14} />
+                  </button>
+                </span>
+              ))}
+            </div>
             <input
               type="text"
-              value={formData.genre || ''}
-              onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+              value={genreInput}
+              onChange={(e) => setGenreInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (genreInput.trim()) {
+                    const currentGenres = (formData.genre || '').split(',').map(g => g.trim()).filter(Boolean);
+                    if (!currentGenres.includes(genreInput.trim())) {
+                      currentGenres.push(genreInput.trim());
+                      setFormData({ ...formData, genre: currentGenres.join(', ') });
+                    }
+                    setGenreInput('');
+                  }
+                }
+              }}
               className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
-              placeholder="e.g. Writing Life, Writing Tips, News"
+              placeholder="Type a category and press Enter"
             />
           </div>
 

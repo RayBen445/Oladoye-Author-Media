@@ -99,7 +99,13 @@ export default function BlogPostDetail() {
       >
         <div className="space-y-6 text-center">
           <div className="flex items-center justify-center space-x-4 text-taupe text-sm font-bold uppercase tracking-widest">
-            <span className="text-accent">{post.genre || "Uncategorized"}</span>
+            {post.genre ? (
+              post.genre.split(',').map(g => g.trim()).filter(Boolean).map((genre, index) => (
+                <span key={index} className="text-accent">{genre}</span>
+              ))
+            ) : (
+              <span className="text-accent">Uncategorized</span>
+            )}
             <span className="w-1 h-1 bg-taupe rounded-full" />
             <div className="flex items-center space-x-1">
               <Clock size={14} />
@@ -142,31 +148,7 @@ export default function BlogPostDetail() {
         </div>
 
         <div className="prose prose-lg prose-headings:font-serif prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-h4:text-xl prose-p:text-deep-brown/80 prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-deep-brown prose-strong:font-bold prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-deep-brown/70 max-w-none">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw, rehypeSanitize, rehypeSlug, [rehypeAutolinkHeadings, { behavior: "wrap" }]]}
-            components={{
-              img({ src, alt }) {
-                return (
-                  <figure className="my-8">
-                    <img
-                      src={src}
-                      alt={alt || ''}
-                      className="w-full rounded-2xl shadow-lg object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                    {alt && (
-                      <figcaption className="mt-3 text-center text-sm text-taupe italic">
-                        {alt}
-                      </figcaption>
-                    )}
-                  </figure>
-                );
-              },
-            }}
-          >
-            {post.content}
-          </ReactMarkdown>
+          <div dangerouslySetInnerHTML={{ __html: post.content }} />
         </div>
 
         <div className="mt-16 pt-12 border-t border-primary/10">
