@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import { Link } from "react-router-dom";
 import { marked } from 'marked';
+import TurndownService from 'turndown';
 import DOMPurify from 'dompurify';
 import { ArrowLeft, User, Mail, Globe, Twitter, Instagram, Linkedin, Facebook } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -9,6 +10,9 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import { useSiteSettings } from "../hooks/useSiteSettings";
 import { Loader2 } from "lucide-react";
+
+const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
+turndownService.escape = (string) => string;
 
 marked.setOptions({
   breaks: true,
@@ -127,7 +131,7 @@ export default function About() {
         {settings.about_content && settings.about_content !== 'The full story of your writing journey.' && (
           <div className="mt-16 pt-12 border-t border-primary/10">
             <div className="prose prose-lg prose-headings:font-serif prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-h4:text-xl prose-p:text-deep-brown/80 prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-deep-brown prose-strong:font-bold max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(settings.about_content || '') as string) }} />
+              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(turndownService.turndown(settings.about_content || '')) as string) }} />
             </div>
           </div>
         )}

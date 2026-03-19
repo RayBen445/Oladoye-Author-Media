@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { useParams, Link } from "react-router-dom";
 import { marked } from 'marked';
+import TurndownService from 'turndown';
 import DOMPurify from 'dompurify';
 import { ArrowLeft, ShoppingCart, Star, Calendar, BookOpen, Share2, Loader2 } from "lucide-react";
 import { supabase, type Book } from "../lib/supabase";
@@ -14,6 +15,9 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+
+const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
+turndownService.escape = (string) => string;
 
 marked.setOptions({
   breaks: true,
@@ -264,7 +268,7 @@ export default function BookDetail() {
               {book.description}
             </p>
                         <div className="leading-relaxed whitespace-pre-wrap prose prose-taupe max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(book.long_description || '') as string) }} />
+              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(turndownService.turndown(book.long_description || '')) as string) }} />
             </div>
           </div>
 
