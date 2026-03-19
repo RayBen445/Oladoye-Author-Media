@@ -172,8 +172,8 @@ export default function BlogPostDetail() {
         <div className="mt-16 pt-12 border-t border-primary/10">
           <div className="bg-secondary/20 p-8 rounded-3xl flex flex-col md:flex-row items-center gap-8">
             <div className="w-24 h-24 rounded-full overflow-hidden shrink-0 border-4 border-white shadow-lg bg-soft-cream flex items-center justify-center">
-              {settings?.author_image_url ? (
-                 <img src={settings.author_image_url} alt={settings?.author_name || post?.author_name} className="w-full h-full object-cover" />
+              {settings?.author_profile_image_url ? (
+                 <img src={settings.author_profile_image_url} alt={settings?.author_name || post?.author_name} className="w-full h-full object-cover" />
               ) : (
                  <User className="text-taupe w-12 h-12" />
               )}
@@ -183,7 +183,7 @@ export default function BlogPostDetail() {
               <p className="text-deep-brown/70 leading-relaxed">
                 {settings?.author_bio || "Author bio goes here."}
               </p>
-              <Link to="/admin/settings" className="text-primary font-bold hover:underline">View Profile</Link>
+              <Link to="/about" className="text-primary font-bold hover:underline">View Profile</Link>
             </div>
           </div>
         </div>

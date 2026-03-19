@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
+import About from "./pages/About";
 import Books from "./pages/Books";
 import BookDetail from "./pages/BookDetail";
 import Blog from "./pages/Blog";
@@ -75,6 +76,7 @@ export default function App() {
           <main className="flex-grow">
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/about" element={<About />} />
               <Route path="/books" element={<Books />} />
               <Route path="/books/:slug" element={<BookDetail />} />
               <Route path="/blog" element={<Blog />} />
