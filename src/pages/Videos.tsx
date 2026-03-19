@@ -15,6 +15,26 @@ type VideoItem = {
   likes?: number;
 };
 
+
+  const getEmbedUrl = (url: string) => {
+    if (!url) return null;
+    let embedUrl = null;
+
+    // YouTube
+    const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
+    if (ytMatch && ytMatch[1]) {
+      embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
+    }
+
+    // Vimeo
+    const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
+    if (vimeoMatch && vimeoMatch[1]) {
+      embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    }
+
+    return embedUrl;
+  };
+
 export default function Videos() {
   const [videos, setVideos] = useState<VideoItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,16 +110,17 @@ export default function Videos() {
                 className="bg-white rounded-3xl overflow-hidden shadow-xl shadow-primary/5 border border-primary/10"
               >
                 <div className="aspect-video relative overflow-hidden bg-black flex items-center justify-center">
-                   {video.video_url.includes('youtube.com') || video.video_url.includes('youtu.be') ? (
+                   {getEmbedUrl(video.video_url) ? (
                      <iframe
-                       src={video.video_url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')}
+                       src={getEmbedUrl(video.video_url)!}
                        className="w-full h-full"
                        allowFullScreen
                        title={video.title}
+                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                      ></iframe>
                    ) : (
                      <video controls className="w-full h-full object-contain" poster={video.thumbnail_url}>
-                       <source src={video.video_url} type="video/mp4" />
+                       <source src={video.video_url} />
                        Your browser does not support the video tag.
                      </video>
                    )}

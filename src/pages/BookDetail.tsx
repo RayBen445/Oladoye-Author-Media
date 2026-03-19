@@ -257,7 +257,7 @@ export default function BookDetail() {
               {book.description}
             </p>
                         <div className="leading-relaxed whitespace-pre-wrap prose prose-taupe max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeSanitize, rehypeSlug, [rehypeAutolinkHeadings, { behavior: "wrap" }]]}>{book.long_description || ''}</ReactMarkdown>
+              <div dangerouslySetInnerHTML={{ __html: book.long_description || '' }} />
             </div>
           </div>
 

@@ -126,6 +126,26 @@ export default function MediaUpload({ value, onChange, label, bucket = 'images',
     }
   };
 
+
+  const getEmbedUrl = (url: string) => {
+    if (!url) return null;
+    let embedUrl = null;
+
+    // YouTube
+    const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
+    if (ytMatch && ytMatch[1]) {
+      embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
+    }
+
+    // Vimeo
+    const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
+    if (vimeoMatch && vimeoMatch[1]) {
+      embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    }
+
+    return embedUrl;
+  };
+
   const containerStyle = aspectRatio ? { aspectRatio } : undefined;
   const containerClass = aspectRatio ? '' : 'aspect-video';
 
