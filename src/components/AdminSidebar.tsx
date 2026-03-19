@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard,
   Image as ImageIcon,
   MessageCircle,
-  Star, Book, PenTool, Settings, LogOut, ExternalLink, Users, X, Mail } from "lucide-react";
+  Star, Book, PenTool, Settings, LogOut, ExternalLink, Users, X, Mail, Headphones, Video, FileText } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 interface AdminSidebarProps {
@@ -26,9 +26,12 @@ export default function AdminSidebar({ mobileOpen = false, onClose }: AdminSideb
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
     { icon: Book, label: "Manage Books", path: "/admin/books" },
+    { icon: FileText, label: "Drafts", path: "/admin/drafts" },
     { icon: MessageCircle, label: "Manage Comments", path: "/admin/comments" },
     { icon: Star, label: "Manage Reviews", path: "/admin/reviews" },
     { icon: PenTool, label: "Manage Blog", path: "/admin/blog" },
+    { icon: Headphones, label: "Manage Podcasts", path: "/admin/podcasts" },
+    { icon: Video, label: "Manage Videos", path: "/admin/videos" },
     { icon: Users, label: "Subscribers", path: "/admin/subscribers" },
     { icon: Mail, label: "Newsletters", path: "/admin/newsletters" },
     { icon: ImageIcon, label: "Manage Media", path: "/admin/media" },

@@ -1,12 +1,26 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Save, Loader2, ImagePlus, AlertCircle } from 'lucide-react';
-import { supabase, type BlogPost } from '../../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import { useSiteSettings } from '../../hooks/useSiteSettings';
 import ImageUpload from './ImageUpload';
 import RichTextEditor from './RichTextEditor';
 
+type BlogPost = {
+  id?: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  genre: string;
+  featured_image_url: string;
+  author_name: string;
+  published: boolean;
+  published_at: string;
+  is_draft: boolean;
+  additional_images?: string[];
+};
 type BlogFormProps = {
-  post?: BlogPost | null;
+  post: BlogPost | null | any;
   onClose: () => void;
   onSuccess: () => void;
 };
@@ -148,6 +162,7 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
       published: true,
       published_at: new Date().toISOString(),
       is_draft: false,
+      additional_images: [],
     }
   );
 
@@ -223,9 +238,18 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
           .eq('id', formData.id);
         if (error) throw error;
       } else {
+        let insertData = { ...formData };
+        if (insertData.published) {
+          // If trying to publish but missing key fields, force draft
+          if (!insertData.title || !insertData.slug || !insertData.content) {
+            insertData.published = false;
+            insertData.is_draft = true;
+            setFormError("Missing required fields for publishing. Saved as draft instead.");
+          }
+        }
         const { error } = await supabase
           .from('blog_posts')
-          .insert([formData]);
+          .insert([insertData]);
         if (error) throw error;
       }
       onSuccess();
@@ -329,8 +353,97 @@ export default function BlogForm({ post, onClose, onSuccess }: BlogFormProps) {
               value={formData.featured_image_url || ''}
               onChange={(url) => setFormData({ ...formData, featured_image_url: url })}
             />
-
           </div>
+
+          <div className="space-y-4 pt-4 border-t border-primary/10">
+            <h3 className="text-sm font-bold text-taupe uppercase tracking-widest">Additional Images</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {formData.additional_images?.map((url: string, index: number) => (
+                <div key={index} className="relative aspect-video rounded-xl overflow-hidden border border-primary/10 group">
+                  <img src={url} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newImages = [...(formData.additional_images || [])];
+                      newImages.splice(index, 1);
+                      setFormData({ ...formData, additional_images: newImages });
+                    }}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+              <div className="aspect-video">
+                <ImageUpload
+                  label=""
+                  value=""
+                  onChange={(url) => setFormData({ ...formData, additional_images: [...(formData.additional_images || []), url] })}
+                />
+              </div>
+            </div>
+          </div>
+
+
+          <div className="space-y-4 pt-4 border-t border-primary/10">
+            <h3 className="text-sm font-bold text-taupe uppercase tracking-widest">Additional Images</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {formData.additional_images?.map((url: string, index: number) => (
+                <div key={index} className="relative aspect-video rounded-xl overflow-hidden border border-primary/10 group">
+                  <img src={url} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newImages = [...(formData.additional_images || [])];
+                      newImages.splice(index, 1);
+                      setFormData({ ...formData, additional_images: newImages });
+                    }}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+              <div className="aspect-video">
+                <ImageUpload
+                  label=""
+                  value=""
+                  onChange={(url) => setFormData({ ...formData, additional_images: [...(formData.additional_images || []), url] })}
+                />
+              </div>
+            </div>
+          </div>
+
+
+          <div className="space-y-4 pt-4 border-t border-primary/10">
+            <h3 className="text-sm font-bold text-taupe uppercase tracking-widest">Additional Images</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {formData.additional_images?.map((url: string, index: number) => (
+                <div key={index} className="relative aspect-video rounded-xl overflow-hidden border border-primary/10 group">
+                  <img src={url} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newImages = [...(formData.additional_images || [])];
+                      newImages.splice(index, 1);
+                      setFormData({ ...formData, additional_images: newImages });
+                    }}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+              <div className="aspect-video">
+                <ImageUpload
+                  label=""
+                  value=""
+                  onChange={(url) => setFormData({ ...formData, additional_images: [...(formData.additional_images || []), url] })}
+                />
+              </div>
+            </div>
+          </div>
+
 
 
           <div className="flex items-center space-x-6">

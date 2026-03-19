@@ -8,12 +8,16 @@ import BookDetail from "./pages/BookDetail";
 import Blog from "./pages/Blog";
 import BlogPostDetail from "./pages/BlogPostDetail";
 import Podcasts from "./pages/Podcasts";
+import Videos from "./pages/Videos";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminBooks from "./pages/admin/Books";
 import AdminBlog from "./pages/admin/Blog";
+import AdminPodcasts from "./pages/admin/Podcasts";
+import AdminVideos from "./pages/admin/Videos";
 import AdminSettings from "./pages/admin/Settings";
 import AdminMediaLibrary from "./pages/admin/MediaLibrary";
 import AdminSubscribers from "./pages/admin/Subscribers";
+import AdminDrafts from "./pages/admin/Drafts";
 import AdminNewsletterHistory from "./pages/admin/NewsletterHistory";
 import AdminComments from "./pages/admin/Comments";
 import AdminReviews from "./pages/admin/Reviews";
@@ -75,6 +79,8 @@ export default function App() {
               <Route path="/books/:slug" element={<BookDetail />} />
               <Route path="/blog" element={<Blog />} />
               <Route path="/blog/:slug" element={<BlogPostDetail />} />
+              <Route path="/podcasts" element={<Podcasts />} />
+              <Route path="/videos" element={<Videos />} />
               <Route path="/login" element={<Login />} />
               
               {/* Protected Admin Routes */}
@@ -82,9 +88,12 @@ export default function App() {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/books" element={<AdminBooks />} />
                 <Route path="/admin/blog" element={<AdminBlog />} />
+                <Route path="/admin/podcasts" element={<AdminPodcasts />} />
+                <Route path="/admin/videos" element={<AdminVideos />} />
                 <Route path="/admin/comments" element={<AdminComments />} />
                 <Route path="/admin/reviews" element={<AdminReviews />} />
                 <Route path="/admin/subscribers" element={<AdminSubscribers />} />
+                <Route path="/admin/drafts" element={<AdminDrafts />} />
                 <Route path="/admin/newsletters" element={<AdminNewsletterHistory />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
                 <Route path="/admin/media" element={<AdminMediaLibrary />} />

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, User, Share2, MessageCircle, Clock, Loader2 } from "lucide-react";
@@ -26,9 +27,11 @@ const getFontClass = (font: string | undefined) => {
 };
 
 export default function BlogPostDetail() {
+  const [settings, setSettings] = useState<any>(null); // Temp fix for lint
   const { slug } = useParams();
   const { post, loading } = usePost(slug || "");
-  const { settings } = useSiteSettings();
+  const { settings: typedSettings } = useSiteSettings();
+  useEffect(() => { setSettings(typedSettings); }, [typedSettings]);
   const { showToast } = useToast();
 
   const handleShare = async () => {
@@ -168,15 +171,14 @@ export default function BlogPostDetail() {
 
         <div className="mt-16 pt-12 border-t border-primary/10">
           <div className="bg-secondary/20 p-8 rounded-3xl flex flex-col md:flex-row items-center gap-8">
-            <div className="w-24 h-24 rounded-full overflow-hidden shadow-lg shrink-0">
-              <img 
-                src={settings?.author_profile_image_url || "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=2070"}
-                alt="Author" 
-                className="w-full h-full object-cover"
-                referrerPolicy="no-referrer"
-              />
+            <div className="w-24 h-24 rounded-full overflow-hidden shrink-0 border-4 border-white shadow-lg bg-soft-cream flex items-center justify-center">
+              {settings?.author_image_url ? (
+                 <img src={settings.author_image_url} alt={settings?.author_name || post?.author_name} className="w-full h-full object-cover" />
+              ) : (
+                 <User className="text-taupe w-12 h-12" />
+              )}
             </div>
-            <div className="space-y-3 text-center md:text-left">
+            <div className="text-center md:text-left">
               <h3 className="text-xl font-serif font-bold text-deep-brown">About {settings?.author_name || post?.author_name}</h3>
               <p className="text-deep-brown/70 leading-relaxed">
                 {settings?.author_bio || "Author bio goes here."}
@@ -185,6 +187,19 @@ export default function BlogPostDetail() {
             </div>
           </div>
         </div>
+
+        {post && post.additional_images && post.additional_images.length > 0 && (
+          <div className="mt-12 mb-8 space-y-4">
+            <h3 className="text-xl font-serif font-bold text-deep-brown">Additional Images</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {post.additional_images.map((url, i) => (
+                <div key={i} className="aspect-video rounded-xl overflow-hidden shadow-sm border border-primary/5">
+                  <img src={url} alt={`Additional image ${i + 1}`} className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {post && <Comments postId={post.id} />}
       </motion.article>

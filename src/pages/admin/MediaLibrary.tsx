@@ -57,6 +57,7 @@ export default function AdminMediaLibrary() {
     setUploading(true);
     try {
       // Use existing uploadImage function
+      // Use uploadMedia once you rename/update it, but for now we fallback to the same uploadImage export name (it just does file upload)
       const publicUrl = await uploadImage(file);
 
       const { data, error } = await supabase.from('media_library').insert([{
@@ -69,10 +70,10 @@ export default function AdminMediaLibrary() {
       if (error) throw error;
 
       setMedia([data as MediaItem, ...media]);
-      showToast("Image uploaded successfully", "success");
+      showToast("Media uploaded successfully", "success");
     } catch (error: any) {
       console.error("Upload failed:", error);
-      showToast(error.message || "Failed to upload image", "error");
+      showToast(error.message || "Failed to upload media", "error");
     } finally {
       setUploading(false);
       // Reset input
@@ -81,7 +82,7 @@ export default function AdminMediaLibrary() {
   };
 
   async function handleDelete(id: string) {
-    if (!window.confirm("Are you sure you want to delete this image?")) return;
+    if (!window.confirm("Are you sure you want to delete this media?")) return;
 
     setProcessingId(id);
     try {
@@ -89,10 +90,10 @@ export default function AdminMediaLibrary() {
       if (error) throw error;
 
       setMedia((current) => current.filter((m) => m.id !== id));
-      showToast("Image deleted successfully", "success");
+      showToast("Media deleted successfully", "success");
     } catch (error: any) {
       console.error("Error deleting image:", error);
-      showToast(error.message || "Failed to delete image", "error");
+      showToast(error.message || "Failed to delete media", "error");
     } finally {
       setProcessingId(null);
     }
@@ -126,8 +127,8 @@ export default function AdminMediaLibrary() {
           <div>
             <label className="cursor-pointer px-6 py-3 bg-primary text-soft-cream rounded-xl font-bold flex items-center space-x-2 shadow-lg hover:bg-primary/90 transition-all">
               {uploading ? <Loader2 size={20} className="animate-spin" /> : <Upload size={20} />}
-              <span>Upload Image</span>
-              <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+              <span>Upload Media</span>
+              <input type="file" accept="image/*,video/*,audio/*" className="hidden" onChange={handleFileUpload} disabled={uploading} />
             </label>
           </div>
         </div>
@@ -136,14 +137,23 @@ export default function AdminMediaLibrary() {
           {media.length === 0 ? (
             <div className="text-center py-12 text-taupe">
               <ImageIcon className="mx-auto h-12 w-12 text-primary/20 mb-4" />
-              <p>No images found in your library.</p>
+              <p>No media found in your library.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {media.map((item) => (
                 <div key={item.id} className="group relative rounded-2xl overflow-hidden border border-primary/10 shadow-sm hover:shadow-md transition-all">
+
                   <div className="aspect-square bg-soft-cream/30 flex items-center justify-center p-2">
-                    <img src={item.url} alt={item.filename} className="max-w-full max-h-full object-contain" />
+                    {item.mime_type?.startsWith('video/') ? (
+                      <video src={item.url} className="max-w-full max-h-full object-contain" />
+                    ) : item.mime_type?.startsWith('audio/') ? (
+                      <div className="flex items-center justify-center w-full h-full text-primary/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                      </div>
+                    ) : (
+                      <img src={item.url} alt={item.filename} className="max-w-full max-h-full object-contain" />
+                    )}
                   </div>
                   <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-4">
                     <div className="text-white text-xs truncate font-medium">
@@ -161,7 +171,7 @@ export default function AdminMediaLibrary() {
                         onClick={() => handleDelete(item.id)}
                         disabled={processingId === item.id}
                         className="p-2 bg-red-500/80 hover:bg-red-500 text-white rounded-xl transition-colors"
-                        title="Delete Image"
+                        title="Delete Media"
                       >
                         {processingId === item.id ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
                       </button>

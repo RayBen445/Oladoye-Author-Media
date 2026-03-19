@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Headphones, Loader2, PlayCircle, Clock, Calendar } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { Heart } from "lucide-react";
+import MediaComments from "../components/MediaComments";
 
 type Podcast = {
   id: string;
@@ -11,6 +13,7 @@ type Podcast = {
   cover_image_url: string;
   duration: string;
   published_at: string;
+  likes?: number;
 };
 
 export default function Podcasts() {
@@ -45,6 +48,18 @@ export default function Podcasts() {
     }
   }
 
+
+  async function handleLike(id: string, currentLikes: number) {
+    try {
+      const newLikes = (currentLikes || 0) + 1;
+      const { error } = await supabase.from('podcasts').update({ likes: newLikes }).eq('id', id);
+      if (error) throw error;
+      setPodcasts(podcasts.map(p => p.id === id ? { ...p, likes: newLikes } : p));
+    } catch (err) {
+      console.error("Error liking podcast:", err);
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-[50vh] flex justify-center items-center">
@@ -66,13 +81,7 @@ export default function Podcasts() {
           </p>
         </div>
 
-        {podcasts.length === 0 ? (
-          <div className="text-center py-20 bg-soft-cream/30 rounded-3xl border border-primary/10">
-            <Headphones className="mx-auto h-16 w-16 text-taupe/30 mb-4" />
-            <h3 className="text-2xl font-serif font-bold text-deep-brown mb-2">Coming Soon</h3>
-            <p className="text-taupe">We are working on bringing you the best episodes.</p>
-          </div>
-        ) : (
+        {podcasts.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {podcasts.map((podcast, index) => (
               <motion.div
@@ -115,9 +124,22 @@ export default function Podcasts() {
                     {podcast.description}
                   </p>
 
+
                   <audio controls className="w-full h-10 rounded-full" src={podcast.audio_url} preload="metadata">
                     Your browser does not support the audio element.
                   </audio>
+
+                  <div className="mt-6 flex items-center justify-between border-t border-primary/10 pt-4">
+                    <button
+                      onClick={() => handleLike(podcast.id, podcast.likes || 0)}
+                      className="flex items-center space-x-2 text-taupe hover:text-red-500 transition-colors"
+                    >
+                      <Heart size={20} className={podcast.likes ? "fill-red-500 text-red-500" : ""} />
+                      <span className="font-bold">{podcast.likes || 0}</span>
+                    </button>
+                  </div>
+
+                  <MediaComments mediaId={podcast.id} tableName="podcast_comments" parentIdField="podcast_id" />
                 </div>
               </motion.div>
             ))}
