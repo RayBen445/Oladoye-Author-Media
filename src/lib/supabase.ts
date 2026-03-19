@@ -86,7 +86,8 @@ export type Book = {
   long_description: string;
   cover_image_url: string;
   release_date: string;
-  genre: string;
+  genre?: string;
+  additional_images?: string[];
   gumroad_link: string;
   selar_link?: string;
   is_draft?: boolean;
@@ -107,8 +108,9 @@ export type BlogPost = {
   author_name: string;
   published: boolean;
   published_at: string;
-  is_draft?: boolean;
-  created_at: string;
+  is_draft: boolean;
+  additional_images?: string[];
+  [key: string]: any;
 };
 
 export type NewsletterCampaign = {

@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Headphones, Loader2, PlayCircle, Clock, Calendar } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { Heart } from "lucide-react";
+import MediaComments from "../components/MediaComments";
 
 type Podcast = {
   id: string;
@@ -11,6 +13,7 @@ type Podcast = {
   cover_image_url: string;
   duration: string;
   published_at: string;
+  likes?: number;
 };
 
 export default function Podcasts() {
@@ -42,6 +45,18 @@ export default function Podcasts() {
       console.error("Error fetching podcasts:", err);
     } finally {
       setLoading(false);
+    }
+  }
+
+
+  async function handleLike(id: string, currentLikes: number) {
+    try {
+      const newLikes = (currentLikes || 0) + 1;
+      const { error } = await supabase.from('podcasts').update({ likes: newLikes }).eq('id', id);
+      if (error) throw error;
+      setPodcasts(podcasts.map(p => p.id === id ? { ...p, likes: newLikes } : p));
+    } catch (err) {
+      console.error("Error liking podcast:", err);
     }
   }
 
@@ -115,9 +130,22 @@ export default function Podcasts() {
                     {podcast.description}
                   </p>
 
+
                   <audio controls className="w-full h-10 rounded-full" src={podcast.audio_url} preload="metadata">
                     Your browser does not support the audio element.
                   </audio>
+
+                  <div className="mt-6 flex items-center justify-between border-t border-primary/10 pt-4">
+                    <button
+                      onClick={() => handleLike(podcast.id, podcast.likes || 0)}
+                      className="flex items-center space-x-2 text-taupe hover:text-red-500 transition-colors"
+                    >
+                      <Heart size={20} className={podcast.likes ? "fill-red-500 text-red-500" : ""} />
+                      <span className="font-bold">{podcast.likes || 0}</span>
+                    </button>
+                  </div>
+
+                  <MediaComments mediaId={podcast.id} tableName="podcast_comments" parentIdField="podcast_id" />
                 </div>
               </motion.div>
             ))}

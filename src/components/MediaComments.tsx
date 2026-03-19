@@ -5,7 +5,7 @@ import { useToast } from './Toast';
 
 export type Comment = {
   id: string;
-  post_id: string;
+  [key: string]: any; // To allow dynamic parent id fields
   author_name: string;
   content: string;
   created_at: string;
@@ -13,11 +13,13 @@ export type Comment = {
   parent_id?: string;
 };
 
-type CommentsProps = {
-  postId: string;
+type MediaCommentsProps = {
+  mediaId: string;
+  tableName: string;
+  parentIdField: string;
 };
 
-export default function Comments({ postId }: CommentsProps) {
+export default function MediaComments({ mediaId, tableName, parentIdField }: MediaCommentsProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -31,12 +33,12 @@ export default function Comments({ postId }: CommentsProps) {
 
     // Subscribe to new comments
     const channel = supabase
-      .channel('public:comments')
+      .channel(`public:${tableName}`)
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'comments',
-        filter: `post_id=eq.${postId}`
+        table: tableName,
+        filter: `${parentIdField}=eq.${mediaId}`
       }, payload => {
         setComments(current => [payload.new as Comment, ...current]);
       })
@@ -45,19 +47,25 @@ export default function Comments({ postId }: CommentsProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [postId]);
+  }, [mediaId, tableName, parentIdField]);
 
   async function fetchComments() {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('comments')
+        .from(tableName)
         .select('*')
-        .eq('post_id', postId)
+        .eq(parentIdField, mediaId)
         .eq('approved', true)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+          if (error.code === '42P01') {
+             setComments([]);
+             return;
+          }
+          throw error;
+      }
       setComments(data || []);
     } catch (error) {
       console.error('Error fetching comments:', error);
@@ -76,7 +84,7 @@ export default function Comments({ postId }: CommentsProps) {
     setSubmitting(true);
     try {
       const payload: any = {
-        post_id: postId,
+        [parentIdField]: mediaId,
         author_name: authorName.trim(),
         content: newComment.trim(),
       };
@@ -84,7 +92,7 @@ export default function Comments({ postId }: CommentsProps) {
         payload.parent_id = replyingTo;
       }
       const { error } = await supabase
-        .from('comments')
+        .from(tableName)
         .insert([payload]);
 
       if (error) throw error;
@@ -104,7 +112,7 @@ export default function Comments({ postId }: CommentsProps) {
   async function handleLike(commentId: string, currentLikes: number) {
     try {
       const newLikes = (currentLikes || 0) + 1;
-      const { error } = await supabase.from('comments').update({ likes: newLikes }).eq('id', commentId);
+      const { error } = await supabase.from(tableName).update({ likes: newLikes }).eq('id', commentId);
       if (error) throw error;
       setComments(comments.map(c => c.id === commentId ? { ...c, likes: newLikes } : c));
     } catch(e) {
@@ -116,13 +124,13 @@ export default function Comments({ postId }: CommentsProps) {
   const getReplies = (parentId: string) => comments.filter(c => c.parent_id === parentId);
 
   return (
-    <div id="comments" className="mt-16 pt-12 border-t border-primary/10">
-      <div className="flex items-center space-x-3 mb-8">
-        <MessageCircle className="text-primary" size={24} />
-        <h3 className="text-2xl font-serif font-bold text-deep-brown">Comments ({comments.length})</h3>
+    <div className="mt-8 pt-8 border-t border-primary/10">
+      <div className="flex items-center space-x-3 mb-6">
+        <MessageCircle className="text-primary" size={20} />
+        <h3 className="text-xl font-serif font-bold text-deep-brown">Comments ({comments.length})</h3>
       </div>
 
-      <form onSubmit={handleSubmit} className="mb-12 bg-soft-cream/30 p-6 rounded-2xl border border-primary/5">
+      <form onSubmit={handleSubmit} className="mb-8 bg-soft-cream/30 p-4 rounded-2xl border border-primary/5">
         {replyingTo && (
            <div className="mb-4 p-3 bg-white border border-primary/10 rounded-xl flex justify-between items-center">
              <span className="text-sm text-taupe font-medium">Replying to comment...</span>
@@ -131,11 +139,10 @@ export default function Comments({ postId }: CommentsProps) {
         )}
         <div className="space-y-4">
           <div>
-            <label htmlFor="authorName" className="block text-xs font-bold text-taupe uppercase tracking-widest mb-2">
+            <label className="block text-xs font-bold text-taupe uppercase tracking-widest mb-2">
               Your Name
             </label>
             <input
-              id="authorName"
               type="text"
               required
               value={authorName}
@@ -145,13 +152,12 @@ export default function Comments({ postId }: CommentsProps) {
             />
           </div>
           <div>
-            <label htmlFor="comment" className="block text-xs font-bold text-taupe uppercase tracking-widest mb-2">
+            <label className="block text-xs font-bold text-taupe uppercase tracking-widest mb-2">
               Comment
             </label>
             <textarea
-              id="comment"
               required
-              rows={4}
+              rows={3}
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               className="w-full px-4 py-3 rounded-xl bg-white border-none focus:ring-2 focus:ring-primary/20 resize-none"
@@ -161,7 +167,7 @@ export default function Comments({ postId }: CommentsProps) {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-4 bg-primary text-soft-cream rounded-xl font-bold flex items-center justify-center space-x-2 disabled:opacity-50 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
+            className="w-full py-3 bg-primary text-soft-cream rounded-xl font-bold flex items-center justify-center space-x-2 disabled:opacity-50 hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
           >
             {submitting ? (
               <Loader2 className="animate-spin" size={20} />
@@ -175,68 +181,67 @@ export default function Comments({ postId }: CommentsProps) {
         </div>
       </form>
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         {loading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="animate-spin text-primary" size={32} />
+          <div className="flex justify-center py-4">
+            <Loader2 className="animate-spin text-primary" size={24} />
           </div>
         ) : rootComments.length === 0 ? (
-          <div className="text-center py-12 bg-soft-cream/10 rounded-2xl border border-primary/5">
-            <MessageCircle className="mx-auto text-taupe/30 mb-4" size={48} />
-            <p className="text-taupe font-medium">No comments yet. Be the first to share your thoughts!</p>
+          <div className="text-center py-8 bg-soft-cream/10 rounded-2xl border border-primary/5">
+            <p className="text-sm text-taupe font-medium">No comments yet. Be the first to share your thoughts!</p>
           </div>
         ) : (
           rootComments.map((comment) => (
-            <div key={comment.id} className="bg-white p-6 rounded-2xl shadow-sm border border-primary/5">
-              <div className="flex justify-between items-start mb-4">
+            <div key={comment.id} className="bg-white p-4 rounded-2xl shadow-sm border border-primary/5">
+              <div className="flex justify-between items-start mb-2">
                 <div>
-                  <h4 className="font-bold text-deep-brown">{comment.author_name}</h4>
-                  <p className="text-xs text-taupe font-medium uppercase tracking-widest mt-1">
+                  <h4 className="font-bold text-deep-brown text-sm">{comment.author_name}</h4>
+                  <p className="text-[10px] text-taupe font-medium uppercase tracking-widest mt-0.5">
                     {new Date(comment.created_at).toLocaleDateString()}
                   </p>
                 </div>
               </div>
-              <p className="text-deep-brown/80 whitespace-pre-wrap leading-relaxed">
+              <p className="text-deep-brown/80 text-sm whitespace-pre-wrap leading-relaxed">
                 {comment.content}
               </p>
 
-              <div className="mt-4 flex items-center gap-4 border-t border-primary/5 pt-4">
+              <div className="mt-3 flex items-center gap-4 border-t border-primary/5 pt-3">
                 <button
                   onClick={() => handleLike(comment.id, comment.likes || 0)}
                   className="flex items-center gap-1.5 text-xs font-bold text-taupe hover:text-red-500 transition-colors"
                 >
-                  <Heart size={16} /> <span>{comment.likes || 0}</span>
+                  <Heart size={14} /> <span>{comment.likes || 0}</span>
                 </button>
                 <button
-                  onClick={() => { setReplyingTo(comment.id); document.getElementById('comment')?.focus(); }}
+                  onClick={() => { setReplyingTo(comment.id); }}
                   className="flex items-center gap-1.5 text-xs font-bold text-taupe hover:text-primary transition-colors"
                 >
-                  <Reply size={16} /> <span>Reply</span>
+                  <Reply size={14} /> <span>Reply</span>
                 </button>
               </div>
 
               {/* Nested Replies */}
               {getReplies(comment.id).length > 0 && (
-                <div className="mt-4 pl-4 md:pl-8 space-y-4 border-l-2 border-primary/10">
+                <div className="mt-3 pl-4 md:pl-6 space-y-3 border-l-2 border-primary/10">
                   {getReplies(comment.id).map(reply => (
-                    <div key={reply.id} className="bg-soft-cream/20 p-4 rounded-xl">
-                       <div className="flex justify-between items-start mb-2">
+                    <div key={reply.id} className="bg-soft-cream/20 p-3 rounded-xl">
+                       <div className="flex justify-between items-start mb-1">
                         <div>
-                          <h4 className="font-bold text-deep-brown text-sm">{reply.author_name}</h4>
-                          <p className="text-[10px] text-taupe font-medium uppercase tracking-widest mt-0.5">
+                          <h4 className="font-bold text-deep-brown text-xs">{reply.author_name}</h4>
+                          <p className="text-[9px] text-taupe font-medium uppercase tracking-widest mt-0.5">
                             {new Date(reply.created_at).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
-                      <p className="text-deep-brown/80 text-sm whitespace-pre-wrap leading-relaxed">
+                      <p className="text-deep-brown/80 text-xs whitespace-pre-wrap leading-relaxed">
                         {reply.content}
                       </p>
-                      <div className="mt-3 flex items-center gap-4">
+                      <div className="mt-2 flex items-center gap-4">
                         <button
                           onClick={() => handleLike(reply.id, reply.likes || 0)}
                           className="flex items-center gap-1.5 text-xs font-bold text-taupe hover:text-red-500 transition-colors"
                         >
-                          <Heart size={14} /> <span>{reply.likes || 0}</span>
+                          <Heart size={12} /> <span>{reply.likes || 0}</span>
                         </button>
                       </div>
                     </div>

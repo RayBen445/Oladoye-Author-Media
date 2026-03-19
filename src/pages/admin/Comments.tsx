@@ -4,6 +4,7 @@ import { Loader2, Trash2, MessageCircle, CheckCircle, XCircle, Heart, Reply, Sen
 import { useToast } from "../../components/Toast";
 
 type Comment = {
+  [key: string]: any;
   id: string;
   post_id: string;
   author_name: string;
@@ -20,11 +21,13 @@ type Comment = {
 import AdminLayout from "../../components/AdminLayout";
 
 export default function AdminComments() {
+  const [activeTab, setActiveTab] = useState<'blog' | 'podcasts' | 'videos'>('blog');
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
+  const [authorReplyName, setAuthorReplyName] = useState('Admin');
   const [submittingReply, setSubmittingReply] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [processingBulk, setProcessingBulk] = useState(false);
@@ -34,26 +37,28 @@ export default function AdminComments() {
     fetchComments();
   }, []);
 
+
   async function fetchComments() {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("comments")
-        .select(`
-          id,
-          post_id,
-          author_name,
-          content,
-          approved,
-          created_at,
-          blog_posts ( title ),
-          likes,
-          parent_id
-        `)
-        .order("created_at", { ascending: false });
+      const tableName = activeTab === 'blog' ? 'comments' : activeTab === 'podcasts' ? 'podcast_comments' : 'video_comments';
+      const fkName = activeTab === 'blog' ? 'post_id' : activeTab === 'podcasts' ? 'podcast_id' : 'video_id';
+      const foreignTable = activeTab === 'blog' ? 'blog_posts(title)' : activeTab === 'podcasts' ? 'podcasts(title)' : 'videos(title)';
 
-      if (error) throw error;
-      setComments(data as unknown as Comment[]);
+      const { data, error } = await supabase
+        .from(tableName)
+        .select(`*, ${foreignTable}`)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+         if (error.code === '42P01') {
+           setComments([]);
+           return;
+         }
+         throw error;
+      }
+      setComments(data || []);
+      setSelectedIds(new Set());
     } catch (error: any) {
       console.error("Error fetching comments:", error);
       showToast(error.message || "Failed to fetch comments", "error");
@@ -61,6 +66,12 @@ export default function AdminComments() {
       setLoading(false);
     }
   }
+
+  // Refetch when tab changes
+  useEffect(() => {
+    fetchComments();
+  }, [activeTab]);
+
 
 
   const toggleSelection = (id: string) => {
@@ -160,12 +171,12 @@ export default function AdminComments() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       // Assume the admin is replying as the site author, or just "Admin"
-      const authorName = "Admin";
+      // Using authorReplyName state instead of hardcoded Admin
 
       const { error } = await supabase.from('comments').insert([{
         post_id: postId,
         parent_id: parentId,
-        author_name: authorName,
+        author_name: authorReplyName,
         content: replyContent.trim(),
         approved: true // Admin replies are auto-approved
       }]);
@@ -195,11 +206,33 @@ if (loading) {
   return (
     <AdminLayout>
     <div className="max-w-6xl mx-auto space-y-8">
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-serif font-bold text-deep-brown">Comments</h1>
-          <p className="text-taupe mt-2">Manage reader comments on your blog posts.</p>
+          <p className="text-taupe mt-2">Manage reader comments.</p>
         </div>
+      </div>
+
+      <div className="flex space-x-4 border-b border-primary/10 pb-4">
+        <button
+          onClick={() => setActiveTab('blog')}
+          className={`px-4 py-2 font-bold rounded-xl transition-colors ${activeTab === 'blog' ? 'bg-primary text-soft-cream' : 'text-taupe hover:bg-primary/5'}`}
+        >
+          Blog Comments
+        </button>
+        <button
+          onClick={() => setActiveTab('podcasts')}
+          className={`px-4 py-2 font-bold rounded-xl transition-colors ${activeTab === 'podcasts' ? 'bg-primary text-soft-cream' : 'text-taupe hover:bg-primary/5'}`}
+        >
+          Podcast Comments
+        </button>
+        <button
+          onClick={() => setActiveTab('videos')}
+          className={`px-4 py-2 font-bold rounded-xl transition-colors ${activeTab === 'videos' ? 'bg-primary text-soft-cream' : 'text-taupe hover:bg-primary/5'}`}
+        >
+          Video Comments
+        </button>
       </div>
 
 
@@ -262,7 +295,7 @@ if (loading) {
                     <div className="flex flex-wrap items-center gap-3">
                       <span className="font-bold text-deep-brown">{comment.author_name}</span>
                       <span className="text-xs text-taupe bg-white px-2 py-1 rounded-md border border-primary/10">
-                        on: {comment.blog_posts?.title || "Unknown Post"}
+                        on: {comment.blog_posts?.title || comment.podcasts?.title || comment.videos?.title || "Unknown Post/Media"}
                       </span>
                       <span className="text-xs text-taupe/60">
                         {new Date(comment.created_at).toLocaleString()}
@@ -295,16 +328,24 @@ if (loading) {
                       </button>
                     </div>
                     {replyingTo === comment.id && (
-                      <div className="mt-4 flex gap-2 w-full max-w-2xl bg-white p-2 rounded-xl border border-primary/20 shadow-sm">
+                      <div className="mt-4 flex flex-col gap-2 w-full max-w-2xl bg-white p-3 rounded-xl border border-primary/20 shadow-sm">
+                        <input
+                          type="text"
+                          value={authorReplyName}
+                          onChange={(e) => setAuthorReplyName(e.target.value)}
+                          placeholder="Author Name (e.g. Admin)"
+                          className="w-full bg-transparent border-b border-primary/20 focus:border-primary focus:ring-0 mb-2 p-1 text-sm font-bold text-deep-brown"
+                          disabled={submittingReply}
+                        />
                         <textarea
                           value={replyContent}
                           onChange={(e) => setReplyContent(e.target.value)}
-                          placeholder="Write an admin reply..."
+                          placeholder="Write a reply or comment as this user..."
                           className="flex-grow bg-transparent border-none focus:ring-0 resize-none h-10 p-2 text-sm text-deep-brown placeholder:text-taupe/50"
                           disabled={submittingReply}
                         />
                         <button
-                          onClick={() => handleAdminReply(comment.post_id, comment.id)}
+                          onClick={() => handleAdminReply(comment.post_id || comment.podcast_id || comment.video_id, comment.id)}
                           disabled={!replyContent.trim() || submittingReply}
                           className="p-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 shrink-0 self-end"
                         >
