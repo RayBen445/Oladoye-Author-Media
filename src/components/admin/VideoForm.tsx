@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { X, Save, AlertCircle, Loader2 } from 'lucide-react';
 import ImageUpload from './ImageUpload';
+import MediaUpload from './MediaUpload';
 
 type Video = {
   id?: string;
@@ -103,17 +104,14 @@ export default function VideoForm({ video, onClose, onSuccess }: VideoFormProps)
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-taupe uppercase tracking-widest">Video URL (YouTube, Vimeo, or MP4)</label>
-              <input
-                type="url"
-                required
-                value={formData.video_url || ''}
-                onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
-                placeholder="https://..."
-              />
-            </div>
+            <MediaUpload
+              type="video"
+              label="Video File or URL (YouTube, Vimeo, MP4)"
+              value={formData.video_url || ''}
+              onChange={(url) => setFormData({ ...formData, video_url: url })}
+              maxSizeMB={200}
+              hint="Recommended format: MP4 (Max 200MB) or use a YouTube/Vimeo URL"
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ImageUpload

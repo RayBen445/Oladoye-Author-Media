@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { X, Save, AlertCircle, Loader2 } from 'lucide-react';
 import ImageUpload from './ImageUpload';
+import MediaUpload from './MediaUpload';
 
 type Podcast = {
   id?: string;
@@ -103,18 +104,14 @@ export default function PodcastForm({ podcast, onClose, onSuccess }: PodcastForm
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-taupe uppercase tracking-widest">Audio File URL</label>
-              <p className="text-xs text-taupe mb-2">Upload the audio file in the Media Library, then paste the URL here.</p>
-              <input
-                type="url"
-                required
-                value={formData.audio_url || ''}
-                onChange={(e) => setFormData({ ...formData, audio_url: e.target.value })}
-                className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20"
-                placeholder="https://.../audio.mp3"
-              />
-            </div>
+            <MediaUpload
+              type="audio"
+              label="Audio File"
+              value={formData.audio_url || ''}
+              onChange={(url) => setFormData({ ...formData, audio_url: url })}
+              maxSizeMB={50}
+              hint="Recommended formats: MP3, WAV, OGG (Max 50MB)"
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ImageUpload
