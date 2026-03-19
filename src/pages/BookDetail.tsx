@@ -3,6 +3,8 @@ import Reviews from "../components/Reviews";
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { useParams, Link } from "react-router-dom";
+import { marked } from 'marked';
+import DOMPurify from 'dompurify';
 import { ArrowLeft, ShoppingCart, Star, Calendar, BookOpen, Share2, Loader2 } from "lucide-react";
 import { supabase, type Book } from "../lib/supabase";
 import { useToast } from "../components/Toast";
@@ -12,6 +14,11 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+});
 
 export default function BookDetail() {
   const { slug } = useParams();
@@ -257,7 +264,7 @@ export default function BookDetail() {
               {book.description}
             </p>
                         <div className="leading-relaxed whitespace-pre-wrap prose prose-taupe max-w-none">
-              <div dangerouslySetInnerHTML={{ __html: book.long_description || '' }} />
+              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(book.long_description || '') as string) }} />
             </div>
           </div>
 
