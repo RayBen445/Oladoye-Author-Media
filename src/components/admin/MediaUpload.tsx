@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, X, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Loader2, Image as ImageIcon, Mic, Square } from 'lucide-react';
 import { uploadImageWithProgress, supabase } from '../../lib/supabase';
 import { useEffect } from 'react';
 import { useToast } from '../Toast';
@@ -9,6 +9,7 @@ import { useToast } from '../Toast';
 type MediaUploadProps = {
   allowedTypes?: string[];
   allowedFormatsLabel?: string;
+  allowAudioRecording?: boolean;
   value: string;
   onChange: (url: string) => void;
   label: string;
@@ -19,29 +20,28 @@ type MediaUploadProps = {
   aspectRatio?: string;
 };
 
-export default function MediaUpload({ value, onChange, label, bucket = 'images', maxSizeMB, restrictFormats, hint, aspectRatio, allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], allowedFormatsLabel = 'JPG, PNG, WEBP, GIF' }: MediaUploadProps) {
+export default function MediaUpload({ value, onChange, label, bucket = 'images', maxSizeMB, restrictFormats, hint, aspectRatio, allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'], allowedFormatsLabel = 'JPG, PNG, WEBP, GIF', allowAudioRecording = false }: MediaUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const { showToast } = useToast();
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<any>(null);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFileUpload = async (file: File) => {
     if (maxSizeMB !== undefined && file.size > maxSizeMB * 1024 * 1024) {
       showToast(`${label} must be under ${maxSizeMB}MB.`, 'error');
-      e.target.value = '';
-      return;
+      return false;
     }
 
-    if (restrictFormats && !allowedTypes.includes(file.type)) {
+    if (restrictFormats && !allowedTypes.includes(file.type) && !file.type.startsWith('audio/webm')) {
       showToast(`Only ${allowedFormatsLabel} are allowed.`, 'error');
-      e.target.value = '';
-      return;
+      return false;
     }
-
 
     setUploading(true);
     setUploadProgress(0);
@@ -50,11 +50,72 @@ export default function MediaUpload({ value, onChange, label, bucket = 'images',
         setUploadProgress(Math.round(progress));
       }, bucket);
       onChange(url);
+      return true;
     } catch (error: any) {
-
       showToast('Error uploading media: ' + error.message, 'error');
+      return false;
     } finally {
       setUploading(false);
+    }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const file = new File([audioBlob], `recording_${Date.now()}.webm`, { type: 'audio/webm' });
+
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+
+        await processFileUpload(file);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+      timerRef.current = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);} catch (err) {
+      console.error("Error accessing microphone:", err);
+      showToast("Could not access microphone for recording.", "error");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      clearInterval(timerRef.current);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const success = await processFileUpload(file);
+    if (!success) {
+      e.target.value = '';
     }
   };
 
@@ -126,7 +187,7 @@ export default function MediaUpload({ value, onChange, label, bucket = 'images',
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
+            disabled={uploading || isRecording}
             className={`w-full ${containerClass} rounded-2xl border-2 border-dashed border-primary/20 bg-soft-cream/30 hover:bg-soft-cream/50 transition-colors flex flex-col items-center justify-center space-y-2 text-taupe group`}
             style={containerStyle}
           >
@@ -152,6 +213,31 @@ export default function MediaUpload({ value, onChange, label, bucket = 'images',
               </>
             )}
           </button>
+        )}
+
+        {allowAudioRecording && !value && (
+          <div className="mt-3">
+            {!isRecording ? (
+              <button
+                type="button"
+                onClick={startRecording}
+                disabled={uploading}
+                className="w-full py-3 rounded-xl border border-primary/20 bg-soft-cream/10 hover:bg-soft-cream/30 transition-colors flex items-center justify-center space-x-2 text-primary font-bold disabled:opacity-50"
+              >
+                <Mic size={18} />
+                <span>Record Audio</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={stopRecording}
+                className="w-full py-3 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 transition-colors flex items-center justify-center space-x-2 text-red-600 font-bold"
+              >
+                <Square size={18} className="fill-current" />
+                <span className="animate-pulse">Recording ({formatTime(recordingTime)}) - Click to Stop</span>
+              </button>
+            )}
+          </div>
         )}
 
         <input

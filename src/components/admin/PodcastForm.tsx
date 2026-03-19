@@ -110,8 +110,9 @@ export default function PodcastForm({ podcast, onClose, onSuccess }: PodcastForm
                 value={formData.audio_url || ''}
                 onChange={(url) => setFormData({ ...formData, audio_url: url })}
                 restrictFormats={true}
-                allowedTypes={['audio/mpeg', 'audio/wav', 'audio/ogg']}
-                allowedFormatsLabel="MP3, WAV, OGG"
+                allowedTypes={['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/webm']}
+                allowedFormatsLabel="MP3, WAV, OGG, WEBM"
+                allowAudioRecording={true}
                 aspectRatio="16/9"
               />
             </div>
