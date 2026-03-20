@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { Headphones, Loader2, PlayCircle, Clock, Calendar } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Heart } from "lucide-react";
+import CustomAudioPlayer from "../components/CustomAudioPlayer";
 import MediaComments from "../components/MediaComments";
 
 type Podcast = {
@@ -125,9 +126,7 @@ export default function Podcasts() {
                   </p>
 
 
-                  <audio controls className="w-full h-10 rounded-full" src={podcast.audio_url} preload="metadata">
-                    Your browser does not support the audio element.
-                  </audio>
+                  <CustomAudioPlayer src={podcast.audio_url} />
 
                   <div className="mt-6 flex items-center justify-between border-t border-primary/10 pt-4">
                     <button
