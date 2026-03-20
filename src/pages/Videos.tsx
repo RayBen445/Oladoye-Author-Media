@@ -109,7 +109,7 @@ export default function Videos() {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className="bg-white rounded-3xl overflow-hidden shadow-xl shadow-primary/5 border border-primary/10"
               >
-                <div className="aspect-video relative overflow-hidden bg-black flex items-center justify-center">
+                <div className="aspect-video relative overflow-hidden bg-black flex items-center justify-center rounded-t-3xl border-b border-primary/10">
                    {getEmbedUrl(video.video_url) ? (
                      <iframe
                        src={getEmbedUrl(video.video_url)!}
