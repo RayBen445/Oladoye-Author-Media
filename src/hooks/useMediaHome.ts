@@ -9,6 +9,7 @@ type Podcast = {
   cover_image_url: string;
   duration: string;
   published_at: string;
+  lyrics?: string;
   likes?: number;
 };
 
@@ -20,6 +21,7 @@ type VideoItem = {
   thumbnail_url: string;
   duration: string;
   published_at: string;
+  lyrics?: string;
   likes?: number;
 };
 

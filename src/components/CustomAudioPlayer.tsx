@@ -12,6 +12,21 @@ export default function CustomAudioPlayer({ src }: CustomAudioPlayerProps) {
   const [isMuted, setIsMuted] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    const handleGlobalPlay = (e: Event) => {
+      const target = e.target as HTMLAudioElement;
+      if (audioRef.current && target !== audioRef.current) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
+    };
+
+    window.addEventListener('play', handleGlobalPlay, true);
+    return () => {
+      window.removeEventListener('play', handleGlobalPlay, true);
+    };
+  }, []);
   const progressBarRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
