@@ -14,6 +14,7 @@ type Podcast = {
   cover_image_url: string;
   duration: string;
   published_at: string;
+  lyrics?: string;
 };
 
 export default function AdminPodcasts() {

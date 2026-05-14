@@ -3,7 +3,10 @@ import { ArrowRight, BookOpen, Star, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useFeaturedBooks } from "../hooks/useBooks";
 import { useBlogPosts } from "../hooks/useBlogPosts";
+import { useMediaHome } from "../hooks/useMediaHome";
+import { PlayCircle, Clock, Calendar, Headphones, Video as VideoIcon } from "lucide-react";
 import { useSiteSettings } from "../hooks/useSiteSettings";
+import CustomAudioPlayer from "../components/CustomAudioPlayer";
 import Newsletter from "../components/Newsletter";
 import WhatsAppForm from "../components/WhatsAppForm";
 
@@ -11,11 +14,30 @@ export default function Home() {
   const { books: featuredBooks, loading: booksLoading } = useFeaturedBooks();
   const { posts: latestPosts, loading: postsLoading } = useBlogPosts();
   const { settings } = useSiteSettings();
+  const { podcasts: latestPodcasts, videos: latestVideos, loading: mediaLoading } = useMediaHome();
 
   const authorName = settings?.author_name || "Author";
   const authorBio = settings?.author_bio || "A brief bio about the author.";
   const authorImage = settings?.author_profile_image_url || "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=2070";
   const tagline = settings?.tagline || "Stories That Breathe Life";
+
+  const getEmbedUrl = (url: string) => {
+    if (!url) return null;
+    let embedUrl = null;
+
+    const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})/);
+    if (ytMatch && ytMatch[1]) {
+      embedUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
+    }
+
+    const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?([0-9]+)/);
+    if (vimeoMatch && vimeoMatch[1]) {
+      embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    }
+
+    return embedUrl;
+  };
+
 
   return (
     <div className="space-y-20 pb-20">
@@ -202,6 +224,148 @@ export default function Home() {
         )}
       </section>
 
+
+
+      {/* Latest Podcasts */}
+      {(latestPodcasts.length > 0 || mediaLoading) && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="flex justify-between items-end mb-12">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-deep-brown mb-2">Latest Podcasts</h2>
+              <p className="text-taupe font-medium">Conversations about writing and life</p>
+            </div>
+            <Link to="/podcasts" className="text-primary font-bold flex items-center space-x-1 hover:underline">
+              <span>Listen All</span>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          {mediaLoading ? (
+            <div className="flex justify-center py-20">
+              <Loader2 className="animate-spin text-primary" size={40} />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {latestPodcasts.map((podcast, i) => (
+                <motion.div
+                  key={podcast.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  whileHover={{ y: -5 }}
+                  className="bg-white rounded-3xl overflow-hidden shadow-sm border border-primary/5 flex flex-col sm:flex-row group"
+                >
+                  <Link to="/podcasts" className="sm:w-2/5 aspect-square sm:aspect-auto relative overflow-hidden bg-soft-cream block">
+                    {podcast.cover_image_url ? (
+                      <img
+                        src={podcast.cover_image_url}
+                        alt={podcast.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex justify-center items-center bg-primary/5">
+                         <Headphones size={32} className="text-primary/30" />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                      <div className="w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity transform scale-75 group-hover:scale-100">
+                        <PlayCircle className="text-primary" size={24} />
+                      </div>
+                    </div>
+                  </Link>
+
+                  <div className="p-6 sm:w-3/5 flex flex-col justify-center">
+                    <div className="flex items-center space-x-3 text-taupe text-xs font-bold uppercase tracking-widest mb-2">
+                      <div className="flex items-center space-x-1"><Calendar size={12} /> <span>{new Date(podcast.published_at).toLocaleDateString()}</span></div>
+                      {podcast.duration && <div className="flex items-center space-x-1"><Clock size={12} /> <span>{podcast.duration}</span></div>}
+                    </div>
+
+                    <h3 className="text-xl font-serif font-bold text-deep-brown mb-2 group-hover:text-primary transition-colors">
+                      <Link to="/podcasts">{podcast.title}</Link>
+                    </h3>
+
+                    <p className="text-deep-brown/60 text-sm line-clamp-2 mb-4">
+                      {podcast.description}
+                    </p>
+
+
+                    <div className="mt-auto pt-4">
+                      <CustomAudioPlayer src={podcast.audio_url} />
+                    </div>
+
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Latest Videos */}
+      {(latestVideos.length > 0 || mediaLoading) && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="flex justify-between items-end mb-12">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-deep-brown mb-2">Latest Videos</h2>
+              <p className="text-taupe font-medium">Watch and learn</p>
+            </div>
+            <Link to="/videos" className="text-primary font-bold flex items-center space-x-1 hover:underline">
+              <span>Watch All</span>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+
+          {mediaLoading ? (
+            <div className="flex justify-center py-20">
+              <Loader2 className="animate-spin text-primary" size={40} />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {latestVideos.map((video, i) => (
+                <motion.div
+                  key={video.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className="bg-white rounded-3xl overflow-hidden shadow-sm border border-primary/5 group"
+                >
+                  <div className="aspect-video relative overflow-hidden bg-black flex items-center justify-center rounded-t-3xl border-b border-primary/10">
+                     {getEmbedUrl(video.video_url) ? (
+                       <iframe
+                         src={getEmbedUrl(video.video_url)!}
+                         className="w-full h-full"
+                         allowFullScreen
+                         title={video.title}
+                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                       ></iframe>
+                     ) : (
+                       <video controls className="w-full h-full object-contain" poster={video.thumbnail_url}>
+                         <source src={video.video_url} />
+                         Your browser does not support the video tag.
+                       </video>
+                     )}
+                  </div>
+
+                  <div className="p-6">
+                    <div className="flex items-center space-x-3 text-taupe text-xs font-bold uppercase tracking-widest mb-2">
+                      <div className="flex items-center space-x-1"><Calendar size={12} /> <span>{new Date(video.published_at).toLocaleDateString()}</span></div>
+                      {video.duration && <div className="flex items-center space-x-1"><Clock size={12} /> <span>{video.duration}</span></div>}
+                    </div>
+
+                    <h3 className="text-xl font-serif font-bold text-deep-brown mb-2">
+                      <Link to="/videos" className="hover:text-primary transition-colors">{video.title}</Link>
+                    </h3>
+
+                    <p className="text-deep-brown/60 text-sm line-clamp-2">
+                      {video.description}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Author Bio Snippet */}
       <section className="bg-secondary/30 py-20">

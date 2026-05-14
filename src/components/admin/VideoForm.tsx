@@ -104,14 +104,17 @@ export default function VideoForm({ video, onClose, onSuccess }: VideoFormProps)
               />
             </div>
 
-            <MediaUpload
-              type="video"
-              label="Video File or URL (YouTube, Vimeo, MP4)"
-              value={formData.video_url || ''}
-              onChange={(url) => setFormData({ ...formData, video_url: url })}
-              maxSizeMB={200}
-              hint="Recommended format: MP4 (Max 200MB) or use a YouTube/Vimeo URL"
-            />
+            <div className="space-y-2">
+              <MediaUpload
+                label="Video File / URL (YouTube, Vimeo, or MP4)"
+                value={formData.video_url || ''}
+                onChange={(url) => setFormData({ ...formData, video_url: url })}
+                restrictFormats={true}
+                allowedTypes={['video/mp4', 'video/webm', 'video/ogg']}
+                allowedFormatsLabel="MP4, WebM, OGG"
+                aspectRatio="16/9"
+              />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ImageUpload

@@ -12,6 +12,7 @@ type Podcast = {
   cover_image_url: string;
   duration: string;
   published_at: string;
+  lyrics?: string;
 };
 
 interface PodcastFormProps {
@@ -32,6 +33,7 @@ export default function PodcastForm({ podcast, onClose, onSuccess }: PodcastForm
       cover_image_url: '',
       duration: '',
       published_at: new Date().toISOString(),
+      lyrics: '',
     }
   );
 
@@ -104,14 +106,30 @@ export default function PodcastForm({ podcast, onClose, onSuccess }: PodcastForm
               />
             </div>
 
-            <MediaUpload
-              type="audio"
-              label="Audio File"
-              value={formData.audio_url || ''}
-              onChange={(url) => setFormData({ ...formData, audio_url: url })}
-              maxSizeMB={50}
-              hint="Recommended formats: MP3, WAV, OGG (Max 50MB)"
-            />
+
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-taupe uppercase tracking-widest">Lyrics (Optional)</label>
+              <textarea
+                rows={5}
+                value={formData.lyrics || ''}
+                onChange={(e) => setFormData({ ...formData, lyrics: e.target.value })}
+                placeholder="Enter lyrics here..."
+                className="w-full px-4 py-3 rounded-xl bg-soft-cream/30 border-none focus:ring-2 focus:ring-primary/20 resize-y"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <MediaUpload
+                label="Audio File / URL"
+                value={formData.audio_url || ''}
+                onChange={(url) => setFormData({ ...formData, audio_url: url })}
+                restrictFormats={true}
+                allowedTypes={['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/webm']}
+                allowedFormatsLabel="MP3, WAV, OGG, WEBM"
+                allowAudioRecording={true}
+                aspectRatio="16/9"
+              />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ImageUpload

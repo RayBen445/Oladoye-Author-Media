@@ -30,14 +30,22 @@ export default function Blog() {
   const genres = useMemo(() => {
     const g = ["All"];
     posts.forEach(p => {
-      if (p.genre && !g.includes(p.genre)) g.push(p.genre);
+      if (p.genre) {
+        const pGenres = p.genre.split(',').map(g => g.trim()).filter(Boolean);
+        pGenres.forEach(pg => {
+          if (!g.includes(pg)) g.push(pg);
+        });
+      }
     });
     return g;
   }, [posts]);
 
   const filteredPosts = useMemo(() => {
     return posts.filter(post => {
-      return selectedGenre === "All" || post.genre === selectedGenre;
+      if (selectedGenre === "All") return true;
+      if (!post.genre) return false;
+      const pGenres = post.genre.split(',').map(g => g.trim()).filter(Boolean);
+      return pGenres.includes(selectedGenre);
     });
   }, [posts, selectedGenre]);
 
@@ -143,7 +151,13 @@ export default function Blog() {
                   />
                 </div>
                 <div className="flex items-center space-x-4 text-taupe text-xs font-bold uppercase tracking-widest mb-3">
-                  <span>{post.genre || "Uncategorized"}</span>
+                  {post.genre ? (
+                    post.genre.split(',').map(g => g.trim()).filter(Boolean).map((genre, index) => (
+                      <span key={index}>{genre}</span>
+                    ))
+                  ) : (
+                    <span>Uncategorized</span>
+                  )}
                   <span className="w-1 h-1 bg-taupe rounded-full" />
                   <span>{Math.ceil(post.content?.split(" ").length / 200) || 5} min read</span>
                 </div>

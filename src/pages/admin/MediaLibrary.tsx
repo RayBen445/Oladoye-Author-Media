@@ -51,35 +51,47 @@ export default function AdminMediaLibrary() {
   }
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
 
     setUploading(true);
+    let successCount = 0;
+    const newMediaItems: MediaItem[] = [];
+
     try {
-      // Use existing uploadImage function
-      // Use uploadMedia once you rename/update it, but for now we fallback to the same uploadImage export name (it just does file upload)
-      const publicUrl = await uploadImage(file);
+      for (const file of files) {
+        try {
+          // Use existing uploadImage function
+          const publicUrl = await uploadImage(file);
 
-      const { data, error } = await supabase.from('media_library').insert([{
-        filename: file.name,
-        url: publicUrl,
-        size: file.size,
-        mime_type: file.type
-      }]).select().single();
+          const { data, error } = await supabase.from('media_library').insert([{
+            filename: file.name,
+            url: publicUrl,
+            size: file.size,
+            mime_type: file.type
+          }]).select().single();
 
-      if (error) throw error;
+          if (error) throw error;
 
-      setMedia([data as MediaItem, ...media]);
-      showToast("Media uploaded successfully", "success");
-    } catch (error: any) {
-      console.error("Upload failed:", error);
-      showToast(error.message || "Failed to upload media", "error");
+          newMediaItems.push(data as MediaItem);
+          successCount++;
+        } catch (fileError: any) {
+          console.error(`Failed to upload ${file.name}:`, fileError);
+          showToast(fileError.message || `Failed to upload ${file.name}`, "error");
+        }
+      }
+
+      if (successCount > 0) {
+        setMedia((current) => [...newMediaItems, ...current]);
+        showToast(`Successfully uploaded ${successCount} ${successCount === 1 ? 'file' : 'files'}`, "success");
+      }
     } finally {
       setUploading(false);
       // Reset input
       event.target.value = '';
     }
   };
+
 
   async function handleDelete(id: string) {
     if (!window.confirm("Are you sure you want to delete this media?")) return;
@@ -128,7 +140,7 @@ export default function AdminMediaLibrary() {
             <label className="cursor-pointer px-6 py-3 bg-primary text-soft-cream rounded-xl font-bold flex items-center space-x-2 shadow-lg hover:bg-primary/90 transition-all">
               {uploading ? <Loader2 size={20} className="animate-spin" /> : <Upload size={20} />}
               <span>Upload Media</span>
-              <input type="file" accept="image/*,video/*,audio/*" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+              <input type="file" accept="image/*,video/*,audio/*" multiple className="hidden" onChange={handleFileUpload} disabled={uploading} />
             </label>
           </div>
         </div>

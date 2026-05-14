@@ -1,24 +1,19 @@
-import { useState, useEffect } from "react";
-import { motion } from "motion/react";
-import { Headphones, Loader2, PlayCircle, Clock, Calendar, ChevronDown, ChevronUp } from "lucide-react";
-import { supabase } from "../lib/supabase";
-import { Heart } from "lucide-react";
-import CustomAudioPlayer from "../components/CustomAudioPlayer";
-import MediaComments from "../components/MediaComments";
+const fs = require('fs');
 
-type Podcast = {
-  id: string;
-  title: string;
-  description: string;
-  audio_url: string;
-  cover_image_url: string;
-  duration: string;
-  published_at: string;
-  lyrics?: string;
-  likes?: number;
-};
+let content = fs.readFileSync('src/pages/Podcasts.tsx', 'utf8');
 
+// Need to import ChevronDown and ChevronUp from lucide-react
+content = content.replace(
+  'import { Headphones, Loader2, PlayCircle, Clock, Calendar } from "lucide-react";',
+  'import { Headphones, Loader2, PlayCircle, Clock, Calendar, ChevronDown, ChevronUp } from "lucide-react";'
+);
 
+// We should use an accordion-style collapsible lyrics section per podcast.
+// Since `podcasts.map` creates multiple cards, we could either keep state for expanded items,
+// or extract the card into a separate component.
+// Creating a separate component is cleaner for state management.
+
+const componentCode = `
 function PodcastCard({ podcast, handleLike }: { podcast: Podcast, handleLike: (id: string, currentLikes: number) => void }) {
   const [showLyrics, setShowLyrics] = useState(false);
 
@@ -98,80 +93,27 @@ function PodcastCard({ podcast, handleLike }: { podcast: Podcast, handleLike: (i
   );
 }
 
-export default function Podcasts() {
-  const [podcasts, setPodcasts] = useState<Podcast[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function Podcasts() {`;
 
-  useEffect(() => {
-    fetchPodcasts();
-  }, []);
+content = content.replace(/export default function Podcasts\(\) \{/, componentCode);
 
-  async function fetchPodcasts() {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('podcasts')
-        .select('*')
-        .order('published_at', { ascending: false });
+// Then replace the inner loop
+const oldLoopRegex = /<motion\.div[\s\S]*?(?=<MediaComments)/;
+const loopReplacement = `<PodcastCard key={podcast.id} podcast={podcast} handleLike={handleLike} />`;
 
-      if (error) {
-        if (error.code === '42P01') {
-          // Table doesn't exist yet, just ignore gracefully
-          setPodcasts([]);
-          return;
-        }
-        throw error;
-      }
-      setPodcasts(data as Podcast[]);
-    } catch (err) {
-      console.error("Error fetching podcasts:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-
-  async function handleLike(id: string, currentLikes: number) {
-    try {
-      const newLikes = (currentLikes || 0) + 1;
-      const { error } = await supabase.from('podcasts').update({ likes: newLikes }).eq('id', id);
-      if (error) throw error;
-      setPodcasts(podcasts.map(p => p.id === id ? { ...p, likes: newLikes } : p));
-    } catch (err) {
-      console.error("Error liking podcast:", err);
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-[50vh] flex justify-center items-center">
-        <Loader2 className="animate-spin text-primary" size={40} />
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-        <div className="text-center mb-16">
-          <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Headphones className="text-primary" size={32} />
-          </div>
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-deep-brown mb-4">The Podcast</h1>
-          <p className="text-xl text-taupe max-w-2xl mx-auto">
-            Listen to conversations about writing, life, and the stories that shape us.
-          </p>
-        </div>
-
-        {podcasts.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+// Wait, standard replacement might be hard with regex for JSX. Let's do string splitting.
+const parts = content.split('<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">');
+if (parts.length > 1) {
+  const innerParts = parts[1].split('</div>\n        )}');
+  if (innerParts.length > 0) {
+    const originalMapping = innerParts[0];
+    const newMapping = `
             {podcasts.map((podcast) => (
               <PodcastCard key={podcast.id} podcast={podcast} handleLike={handleLike} />
             ))}
-
-        </div>
-        )}
-      </motion.div>
-    </div>
-  );
+          `;
+    content = parts[0] + '<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">' + newMapping + '\n        </div>\n        )}' + innerParts.slice(1).join('</div>\n        )}');
+  }
 }
+
+fs.writeFileSync('src/pages/Podcasts.tsx', content);

@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { useParams, Link } from "react-router-dom";
+import { marked } from 'marked';
+import TurndownService from 'turndown';
+import DOMPurify from 'dompurify';
 import { ArrowLeft, Calendar, User, Share2, MessageCircle, Clock, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -25,6 +28,14 @@ const getFontClass = (font: string | undefined) => {
     default: return 'font-sans';
   }
 };
+
+const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
+turndownService.escape = (string) => string;
+
+marked.setOptions({
+  breaks: true,
+  gfm: true,
+});
 
 export default function BlogPostDetail() {
   const [settings, setSettings] = useState<any>(null); // Temp fix for lint
@@ -99,7 +110,13 @@ export default function BlogPostDetail() {
       >
         <div className="space-y-6 text-center">
           <div className="flex items-center justify-center space-x-4 text-taupe text-sm font-bold uppercase tracking-widest">
-            <span className="text-accent">{post.genre || "Uncategorized"}</span>
+            {post.genre ? (
+              post.genre.split(',').map(g => g.trim()).filter(Boolean).map((genre, index) => (
+                <span key={index} className="text-accent">{genre}</span>
+              ))
+            ) : (
+              <span className="text-accent">Uncategorized</span>
+            )}
             <span className="w-1 h-1 bg-taupe rounded-full" />
             <div className="flex items-center space-x-1">
               <Clock size={14} />
@@ -142,38 +159,14 @@ export default function BlogPostDetail() {
         </div>
 
         <div className="prose prose-lg prose-headings:font-serif prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-h4:text-xl prose-p:text-deep-brown/80 prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-deep-brown prose-strong:font-bold prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-deep-brown/70 max-w-none">
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw, rehypeSanitize, rehypeSlug, [rehypeAutolinkHeadings, { behavior: "wrap" }]]}
-            components={{
-              img({ src, alt }) {
-                return (
-                  <figure className="my-8">
-                    <img
-                      src={src}
-                      alt={alt || ''}
-                      className="w-full rounded-2xl shadow-lg object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                    {alt && (
-                      <figcaption className="mt-3 text-center text-sm text-taupe italic">
-                        {alt}
-                      </figcaption>
-                    )}
-                  </figure>
-                );
-              },
-            }}
-          >
-            {post.content}
-          </ReactMarkdown>
+          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(turndownService.turndown(post.content || '')) as string) }} />
         </div>
 
         <div className="mt-16 pt-12 border-t border-primary/10">
           <div className="bg-secondary/20 p-8 rounded-3xl flex flex-col md:flex-row items-center gap-8">
             <div className="w-24 h-24 rounded-full overflow-hidden shrink-0 border-4 border-white shadow-lg bg-soft-cream flex items-center justify-center">
-              {settings?.author_image_url ? (
-                 <img src={settings.author_image_url} alt={settings?.author_name || post?.author_name} className="w-full h-full object-cover" />
+              {settings?.author_profile_image_url ? (
+                 <img src={settings.author_profile_image_url} alt={settings?.author_name || post?.author_name} className="w-full h-full object-cover" />
               ) : (
                  <User className="text-taupe w-12 h-12" />
               )}
@@ -183,7 +176,7 @@ export default function BlogPostDetail() {
               <p className="text-deep-brown/70 leading-relaxed">
                 {settings?.author_bio || "Author bio goes here."}
               </p>
-              <Link to="/admin/settings" className="text-primary font-bold hover:underline">View Profile</Link>
+              <Link to="/about" className="text-primary font-bold hover:underline">View Profile</Link>
             </div>
           </div>
         </div>
