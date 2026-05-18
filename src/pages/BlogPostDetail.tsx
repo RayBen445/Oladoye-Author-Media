@@ -1,8 +1,6 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { motion } from "motion/react";
 import { useParams, Link } from "react-router-dom";
-import { marked } from 'marked';
-import TurndownService from 'turndown';
 import DOMPurify from 'dompurify';
 import { ArrowLeft, Calendar, User, Share2, MessageCircle, Clock, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -29,21 +27,15 @@ const getFontClass = (font: string | undefined) => {
   }
 };
 
-const turndownService = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced' });
-turndownService.escape = (string) => string;
-
-marked.setOptions({
-  breaks: true,
-  gfm: true,
-});
+const containsHtmlTags = (content: string) => /<\/?[a-z][\s\S]*>/i.test(content);
 
 export default function BlogPostDetail() {
-  const [settings, setSettings] = useState<any>(null); // Temp fix for lint
   const { slug } = useParams();
   const { post, loading } = usePost(slug || "");
-  const { settings: typedSettings } = useSiteSettings();
-  useEffect(() => { setSettings(typedSettings); }, [typedSettings]);
+  const { settings } = useSiteSettings();
   const { showToast } = useToast();
+  const content = post?.content || "";
+  const renderAsHtml = useMemo(() => containsHtmlTags(content), [content]);
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -159,7 +151,16 @@ export default function BlogPostDetail() {
         </div>
 
         <div className="prose prose-lg prose-headings:font-serif prose-headings:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-h4:text-xl prose-p:text-deep-brown/80 prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-deep-brown prose-strong:font-bold prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-deep-brown/70 max-w-none">
-          <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked.parse(turndownService.turndown(post.content || '')) as string) }} />
+          {renderAsHtml ? (
+            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
+          ) : (
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw, rehypeSanitize, rehypeSlug, rehypeAutolinkHeadings]}
+            >
+              {content}
+            </ReactMarkdown>
+          )}
         </div>
 
         <div className="mt-16 pt-12 border-t border-primary/10">

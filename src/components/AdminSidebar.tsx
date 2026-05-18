@@ -102,7 +102,7 @@ export default function AdminSidebar({ mobileOpen = false, onClose }: AdminSideb
   return (
     <>
       {/* Desktop sidebar — hidden on mobile */}
-      <div className="hidden lg:block border-r border-primary/10 sticky top-admin-sticky self-start h-admin-content overflow-y-auto shrink-0">
+      <div className="hidden lg:block border-r border-primary/10 sticky top-12 self-start h-[calc(100vh-48px)] overflow-y-auto shrink-0">
         {sidebarContent}
       </div>
 
