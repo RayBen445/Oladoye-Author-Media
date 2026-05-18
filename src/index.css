@@ -24,11 +24,12 @@
   /* Main navbar height (h-16 = 64px) */
   :root {
     --main-navbar-height: 64px;
+    --admin-navbar-height: 48px;
   }
 
-  /* Combined height of main navbar (64px) + admin navbar (48px) */
+  /* Admin-routes-only content offset under the admin navbar (does not include main navbar height) */
   :root {
-    --admin-header-offset: 112px;
+    --admin-header-offset: var(--admin-navbar-height);
   }
 }
 

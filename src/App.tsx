@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import Navbar from "./components/Navbar";
 import ScrollToTop from "./components/ScrollToTop";
@@ -37,6 +37,49 @@ function AnalyticsTracker() {
   return null;
 }
 
+function AppChrome() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
+  const isLoginRoute = location.pathname === "/login";
+  const showPublicChrome = !isAdminRoute && !isLoginRoute;
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {showPublicChrome && <Navbar />}
+      <main className="flex-grow">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/books" element={<Books />} />
+          <Route path="/books/:slug" element={<BookDetail />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPostDetail />} />
+          <Route path="/podcasts" element={<Podcasts />} />
+          <Route path="/videos" element={<Videos />} />
+          <Route path="/login" element={<Login />} />
+          
+          {/* Protected Admin Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/books" element={<AdminBooks />} />
+            <Route path="/admin/blog" element={<AdminBlog />} />
+            <Route path="/admin/podcasts" element={<AdminPodcasts />} />
+            <Route path="/admin/videos" element={<AdminVideos />} />
+            <Route path="/admin/comments" element={<AdminComments />} />
+            <Route path="/admin/reviews" element={<AdminReviews />} />
+            <Route path="/admin/subscribers" element={<AdminSubscribers />} />
+            <Route path="/admin/drafts" element={<AdminDrafts />} />
+            <Route path="/admin/newsletters" element={<AdminNewsletterHistory />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/media" element={<AdminMediaLibrary />} />
+          </Route>
+        </Routes>
+      </main>
+      {showPublicChrome && <Footer />}
+    </div>
+  );
+}
+
 export default function App() {
     const { settings, error, loading } = useSiteSettings();
 
@@ -73,39 +116,7 @@ export default function App() {
       <Router>
         <AnalyticsTracker />
         <ScrollToTop />
-        <div className="min-h-screen flex flex-col">
-          <Navbar />
-          <main className="flex-grow">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/books" element={<Books />} />
-              <Route path="/books/:slug" element={<BookDetail />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogPostDetail />} />
-              <Route path="/podcasts" element={<Podcasts />} />
-              <Route path="/videos" element={<Videos />} />
-              <Route path="/login" element={<Login />} />
-              
-              {/* Protected Admin Routes */}
-              <Route element={<ProtectedRoute />}>
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/books" element={<AdminBooks />} />
-                <Route path="/admin/blog" element={<AdminBlog />} />
-                <Route path="/admin/podcasts" element={<AdminPodcasts />} />
-                <Route path="/admin/videos" element={<AdminVideos />} />
-                <Route path="/admin/comments" element={<AdminComments />} />
-                <Route path="/admin/reviews" element={<AdminReviews />} />
-                <Route path="/admin/subscribers" element={<AdminSubscribers />} />
-                <Route path="/admin/drafts" element={<AdminDrafts />} />
-                <Route path="/admin/newsletters" element={<AdminNewsletterHistory />} />
-                <Route path="/admin/settings" element={<AdminSettings />} />
-                <Route path="/admin/media" element={<AdminMediaLibrary />} />
-              </Route>
-            </Routes>
-          </main>
-          <Footer />
-        </div>
+        <AppChrome />
       </Router>
     </ToastProvider>
   );
