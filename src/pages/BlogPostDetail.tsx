@@ -27,7 +27,18 @@ const getFontClass = (font: string | undefined) => {
   }
 };
 
-const containsHtmlTags = (content: string) => /<\/?[a-z][\s\S]*>/i.test(content);
+const HTML_BLOCK_TAGS = [
+  "article", "aside", "blockquote", "br", "code", "div", "figcaption", "figure",
+  "h1", "h2", "h3", "h4", "h5", "h6", "hr", "img", "li", "ol", "p", "pre",
+  "section", "span", "table", "tbody", "td", "th", "thead", "tr", "ul",
+];
+
+const htmlTagRegex = new RegExp(
+  `(^|\\n)\\s*<\\/?(?:${HTML_BLOCK_TAGS.join("|")})\\b[^>]*>`,
+  "i"
+);
+
+const containsHtmlTags = (content: string) => htmlTagRegex.test(content);
 
 export default function BlogPostDetail() {
   const { slug } = useParams();

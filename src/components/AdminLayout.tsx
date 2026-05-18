@@ -21,7 +21,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <AdminNavbar onMenuClick={() => setSidebarOpen(true)} />
       <div className="flex">
         <AdminSidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <div className="flex-grow bg-soft-cream/50 min-h-[calc(100vh-48px)] overflow-x-hidden">
+        {/* Defined in src/index.css utilities */}
+        <div className="flex-grow bg-soft-cream/50 min-h-admin-content overflow-x-hidden">
           {children}
         </div>
       </div>
